@@ -1,6 +1,6 @@
 import { SourceManager } from "../programs/sourceManager";
 import { Role } from "./role";
-import { Alloter, ALLOT_TRANSPORT, allotUnit } from "../logistics/alloter";
+import { Alloter, ALLOT_TRANSPORT } from "../logistics/alloter";
 import { profile } from "../profiler/decorator";
 import { Process } from "../process/process";
 import { Porcesses } from "../process/processes";

@@ -16,8 +16,8 @@ export class RoleContainer extends Role{
     run(){
         if(this.creep.room.name != this.targetName){
             let room = Game.rooms[this.targetName];
-            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS)[0]);
-            else this.creep.travelTo(new RoomPosition(25, 25, this.targetName));
+            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS)[0], {preferHighway: true});
+            else this.creep.travelTo(new RoomPosition(25, 25, this.targetName), {preferHighway: true});
             return;
         }
 

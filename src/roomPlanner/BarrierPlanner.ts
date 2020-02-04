@@ -172,7 +172,7 @@ export class BarrierPlanner{
                             continue;
                         }
                         if(structures[STRUCTURE_EXTENSION]) {
-                            if(extensionCount <= 38) {
+                            if(extensionCount <= 48) {
                                 this.setMap(map, x, y, MAP_ON);
                                 continue;
                             }

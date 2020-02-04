@@ -101,7 +101,6 @@ module.exports = {
             }
         }
         Memory.lab[roomName].state = state;
-        
         //console.log('state is ',state)
         // run state
         
@@ -156,7 +155,6 @@ module.exports = {
                 });
             }
         }
-        
 
     }
 };
@@ -215,15 +213,13 @@ function getAvaliableSpawn(room){
     return null;
 }
 function creepKill(creep){
-    const spawn = creep.pos.findClosestByPath(FIND_STRUCTURES,{filter:{structureType:STRUCTURE_SPAWN}})
-    if(!creep.pos.isNearTo(spawn))creep.moveTo(spawn)
-    else spawn.recycleCreep(creep)
+    creep.suicide();
 }
 function WAT(creep,withdrawTarget,transferTarget,type,amount){
     //console.log(creep.store[type])
     if(_.sum(creep.store) && creep.store[type] != _.sum(creep.store)){
         //console.log(creep.store[type] , _.sum(creep.store),type)
-        creep.moveTo(creep.room.storage)
+        creep.travelTo(creep.room.storage)
         if(creep.pos.isNearTo(creep.room.storage)){
             for (var resourceType in creep.store){
                 if(resourceType != type){
@@ -237,7 +233,7 @@ function WAT(creep,withdrawTarget,transferTarget,type,amount){
     //console.log('amount',amount)
     if(_.sum(creep.store) == 0){
         amount = Math.min(amount,withdrawTarget.store[type]);
-        creep.moveTo(withdrawTarget)
+        creep.travelTo(withdrawTarget)
         if(creep.pos.isNearTo(withdrawTarget)){
             creep.withdraw(withdrawTarget,type,amount)
         }
@@ -245,12 +241,12 @@ function WAT(creep,withdrawTarget,transferTarget,type,amount){
         //console.log(withdrawTarget,creep.store.getFreeCapacity(type),withdrawTarget.store[type])
         if(withdrawTarget && creep.store[type] < amount && creep.store.getFreeCapacity(type) > 0 && withdrawTarget.store[type] > 0){
             amount = Math.min(amount,creep.store.getFreeCapacity(type),withdrawTarget.store[type]);
-            creep.moveTo(withdrawTarget)
+            creep.travelTo(withdrawTarget)
             if(creep.pos.isNearTo(withdrawTarget)){
                 creep.withdraw(withdrawTarget,type,amount)
             }
         }else{
-            creep.moveTo(transferTarget)
+            creep.travelTo(transferTarget)
             if(creep.pos.isNearTo(transferTarget)){
                 creep.transfer(transferTarget,type)
             }

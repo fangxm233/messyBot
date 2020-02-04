@@ -12,6 +12,7 @@ import { ProcessBoost } from "./instances/boost";
 import { ProcessActiveDefend } from "./instances/activeDefend";
 import { ProcessDefendNuke } from "./instances/defendNuke";
 import { ProcessAttack } from "./instances/attack";
+import { ProcessAttackController } from "./instances/attackController";
 
 @profile
 export class Porcesses{
@@ -71,6 +72,12 @@ export class Porcesses{
 
     static processAttack(roomName: string, targetRoom: string): ProcessAttack{
         let process = new ProcessAttack(roomName, targetRoom);
+        Process.startPorcess(process);
+        return process;
+    }
+
+    static processAttackController(roomName: string, targetRoom: string, creepNum: number): ProcessAttackController{
+        let process = new ProcessAttackController(roomName, targetRoom, creepNum);
         Process.startPorcess(process);
         return process;
     }
@@ -140,6 +147,9 @@ export class Porcesses{
                 break;
             case 'attack':
                 process = ProcessAttack.getInstance(processI as ProcessAttackInterface, roomName);
+                break;
+            case 'attackController':
+                process = ProcessAttackController.getInstance(processI as ProcessAttackControllerInterface, roomName);
                 break;
             default:
                 break;

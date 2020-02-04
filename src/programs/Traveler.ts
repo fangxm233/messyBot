@@ -174,7 +174,7 @@ export class Traveler {
     }
 
     private static pushCreeps(creep: Creep, nextDir: number){
-        if(creep.memory.role == 'manager') console.log('pushing')
+        // if(creep.memory.role == 'manager') console.log('pushing')
         const obstructingCreep = this.findBlockingCreep(creep, nextDir);
         if(obstructingCreep){
             let dir = this.getPushDirection(creep, obstructingCreep);
@@ -618,7 +618,7 @@ export class Traveler {
             }
         }
         
-        for (let site of room.find(FIND_MY_CONSTRUCTION_SITES)) {
+        for (let site of room.find(FIND_CONSTRUCTION_SITES)) {
             if (site.structureType === STRUCTURE_CONTAINER || site.structureType === STRUCTURE_ROAD
                 || site.structureType === STRUCTURE_RAMPART) { continue; }
             matrix.set(site.pos.x, site.pos.y, structureCost || 0xff);

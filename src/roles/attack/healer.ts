@@ -5,6 +5,8 @@ import { Traveler } from "../../programs/Traveler";
 import { RoleFactory } from "../roleFactory";
 import { RoleWarrior } from "./warrior";
 import { RoleDestroyer } from "./destroyer";
+import { possibleDamage, possibleTowerDamage } from "../../utils";
+import { USER_NAME } from "../../config";
 
 @profile
 export class RoleHealer extends Role {
@@ -42,8 +44,9 @@ export class RoleHealer extends Role {
             return;
         }
 
-        if(this.creep.room.name != this.process.targetRoom || this.process.agressiveCreeps.length) {
-            if(!this.moved) this.creep.travelTo(healing, {ignoreCreeps: this.creep.room.name == this.process.targetRoom ? false : true, pushCreep: false, repath: 0.5, range: 0})
+        // let damage = possibleDamage(healing.body, healing.pos, USER_NAME, false, possibleTowerDamage(this.creep.room, healing.pos))
+        // if(this.creep.room.name != this.process.targetRoom || !damage) {
+            if(!this.moved) this.creep.travelTo(healing, {ignoreCreeps: this.creep.room.name == this.process.targetRoom ? false : true, pushCreep: this.creep.room.name == this.process.targetRoom ? false : true, repath: 0.5, range: 0, maxRooms: 1})
             // this.creep.moveTo(healing, {reusePath: 0});
             let injured = this.creep.pos.findInRange(FIND_MY_CREEPS, 3, {filter: creep => creep.hits < creep.hitsMax});
             if(injured.length) {
@@ -51,10 +54,10 @@ export class RoleHealer extends Role {
                 return;
             }
             this.heal(healing);    
-        } else {
-            let site = this.creep.pos.findClosestByRange(FIND_HOSTILE_CONSTRUCTION_SITES);
-            if(site) this.creep.travelTo(site);
-        }
+        // } else {
+        //     let site = this.creep.pos.findClosestByRange(FIND_HOSTILE_CONSTRUCTION_SITES);
+        //     if(site) this.creep.travelTo(site);
+        // }
     }
 
     heal(target: Creep) {

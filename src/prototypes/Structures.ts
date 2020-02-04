@@ -187,7 +187,7 @@ Object.defineProperty(StructureTower.prototype, 'isFull', { // if this container
 
 Object.defineProperty(StructureTower.prototype, 'isEmpty', { // if this container-like object is empty
 	get() {
-		return this.energy == 0;
+		return this.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
 	},
 	configurable: true,
 });

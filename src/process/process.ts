@@ -62,11 +62,13 @@ export class Process{
 
     public registerCreep(creepName: string){
         this.creeps.push(creepName);
+        console.log('same', this.creeps == this.memory.creeps)
         if(this.creeps != this.memory.creeps) this.memory.creeps.push(creepName);
         console.log(this.roomName, this.processName, this.id, 'register', creepName);
     }
     public removeCreep(creepName: string){
         _.pull(this.creeps, creepName);
+        console.log('same', this.creeps == this.memory.creeps)
         if(this.creeps != this.memory.creeps) _.pull(this.memory.creeps, creepName);
         console.log(this.roomName, this.processName, this.id, 'remove', creepName);
     }
@@ -89,9 +91,12 @@ export class Process{
         this.sleepTime = 0;
         console.log(this.roomName, this.processName, this.id, 'active');
     }
-    sleep(time: number){
+    sleep(time: number, removeAllCreeps?: boolean){
         this.state = 'sleeping';
         this.sleepTime = time;
+
+        if(removeAllCreeps) this.foreachCreep(creep => this.removeCreep(creep.name));
+
         console.log(this.roomName, this.processName, this.id, 'sleeping', time);
     }
     suspend(){
@@ -203,10 +208,11 @@ export class Process{
             const processes = this.process_Type[processName];
             _.forEach(processes, process => {
                 if(!process) return;
+                process.memory = Memory.processes[process.roomName][process.id];
                 // if(process.processName == 'boost') console.log(process.memory)
                 switch (process.state) {
                     case 'sleeping':
-                        process._sleepTime--;
+                        process.sleepTime--;
                         if(process.sleepTime <= -1) {
                             process.awake();
                             process.run();

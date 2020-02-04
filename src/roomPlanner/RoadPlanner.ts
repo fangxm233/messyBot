@@ -103,7 +103,7 @@ export class RoadPlanner{
             if(pos.isEdge) continue;
             path += pos.getDirectionTo(posNext);
         }
-
+        
         return result;
     }
 

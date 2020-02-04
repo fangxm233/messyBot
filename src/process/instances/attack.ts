@@ -18,7 +18,7 @@ const roleToCompounds = {
     'healer': ['XLHO2', 'XZHO2', 'XGHO2']
 };
 
-export const healerNumPerGroup: number = 2;
+export const healerNumPerGroup: number = 1;
 
 export const healerPos: {
     left: {
@@ -182,7 +182,7 @@ export class ProcessAttack extends Process{
             this.targetCreeps = [];
             this.agressiveCreeps = [];
         }
-// return
+
         warriors.forEach(warrior => this.runCreep(warrior));
         destroyers.forEach(destroyer => this.runCreep(destroyer));
         healers.forEach(healer => this.runCreep(healer));
@@ -226,28 +226,31 @@ export class ProcessAttack extends Process{
         return matrix;
     }
 
-    getTargets(pos: RoomPosition, creep?: boolean): (AnyStructure | Creep)[] {
+    getTargets(pos: RoomPosition, creep?: boolean): (AnyStructure | Creep | ConstructionSite)[] {
         let room = Game.rooms[this.targetRoom];
         if(!room) return [];
         let easyTargets = room.structures.filter(structure => !structure.pos.lookForStructure(STRUCTURE_RAMPART) && 
             structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART && 
             structure.structureType != STRUCTURE_ROAD && structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_CONTROLLER && 
-            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL && !structure.my);
+            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL 
+            && !structure.my);
         if(easyTargets.length) return easyTargets;
         if(room.spawns.filter(structure => !structure.my).length) return room.spawns.filter(structure => !structure.my);
         if(room.towers.filter(structure => !structure.my).length) return room.towers.filter(structure => !structure.my);
         if(room.storage && !room.storage.my) return [room.storage];
-        if(room.terminal && !room.terminal.my) return [room.terminal];
+        // if(room.terminal && !room.terminal.my) return [room.terminal];
         if(room.nuker && !room.nuker.my) return [room.nuker];
         if(room.invaderCore) return [room.invaderCore];
         if(room.extensions.filter(structure => !structure.my).length) return room.extensions.filter(structure => !structure.my);
         let targets = room.structures.filter(structure => structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART && 
             structure.structureType != STRUCTURE_ROAD && structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_CONTROLLER && 
-            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL && !structure.my);
+            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL 
+            && !structure.my);
+        let hostle = room.find(FIND_HOSTILE_CREEPS);
         if(targets.length) return targets;
-        else if(creep) return room.find(FIND_HOSTILE_CREEPS);
+        else if(creep && hostle.length) return hostle;
+        else return room.find(FIND_CONSTRUCTION_SITES);
         return [];
-        // return ;
     }
 
     close() {

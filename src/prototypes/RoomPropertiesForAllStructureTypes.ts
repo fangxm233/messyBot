@@ -79,7 +79,7 @@ Room.prototype._refreshRoomCache = function _refreshRoomCache(){
 multipleList.forEach(function(type){
     Object.defineProperty(Room.prototype, type+'s', {
         get: function(){
-            if(this['_'+type+'s'] && this['_'+type+'s_ts'] === Game.time){
+            if(this['_'+type+'s']){
                 return this['_'+type+'s'];
             } else {
                 this._checkRoomCache();
@@ -111,7 +111,7 @@ multipleList.forEach(function(type){
 
 Object.defineProperty(Room.prototype, 'structures', {
     get: function(){
-        if(this['_structures'] && this['_structures_ts'] === Game.time){
+        if(this['_structures']){
             return this['_structures'];
         } else {
             this._checkRoomCache();
@@ -143,7 +143,7 @@ Object.defineProperty(Room.prototype, 'structures', {
 singleList.forEach(function(type){
     Object.defineProperty(Room.prototype, type, {
         get: function(){
-            if(this['_'+type] && this['_'+type+'_ts'] === Game.time){
+            if(this['_'+type]){
                 return this['_'+type];
             } else {
                 this._checkRoomCache();

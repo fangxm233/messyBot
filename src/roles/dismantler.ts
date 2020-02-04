@@ -6,6 +6,26 @@ export class RoleDismantler extends Role {
     run() {
         if (!Memory.gotoDismantle || !Game.flags['dismantle']) return;
         if (this.creep.hits < this.creep.hitsMax) Memory.gotoDismantle = false;
+        let flag = Game.flags['dismantle'];
+        let room = flag.room;
+        if (this.creep.room.name != flag.pos.roomName) {
+            this.creep.travelTo(flag, { preferHighway: true, allowHostile: true});
+            return;
+        }
+        if(!this.creep.pos.inRangeTo(flag, 1)) {
+            this.creep.travelTo(flag);
+            return;
+        }
+        let pc = this.creep.pos.findInRange(FIND_POWER_CREEPS, 1, {filter: pc => pc.store.getFreeCapacity() > 0})[0];
+        if(pc) this.creep.transfer(pc, RESOURCE_OPS);
+    }
+}
+/*
+@profile
+export class RoleDismantler extends Role {
+    run() {
+        if (!Memory.gotoDismantle || !Game.flags['dismantle']) return;
+        if (this.creep.hits < this.creep.hitsMax) Memory.gotoDismantle = false;
         let room = Game.flags['dismantle'].room;
         if (!room) {
             this.creep.travelTo(Game.flags['dismantle'], { preferHighway: true, allowHostile: true});
@@ -35,3 +55,4 @@ export class RoleDismantler extends Role {
         }
     }
 }
+*/

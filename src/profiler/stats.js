@@ -119,6 +119,7 @@ export class InfluxDB {
       duration: Memory.lastDur,
       globalUptime: Game.time - this.startTick
     })
+    //console.log('up time', Game.time - this.startTick, 'now tick:', Game.time, 'start tick', this.startTick)
     this.addStat('gcl', {}, {
       level: Game.gcl.level,
       progress: Game.gcl.progress,

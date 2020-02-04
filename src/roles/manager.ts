@@ -288,7 +288,14 @@ export class RoleManager extends Role{
 
         if(!this.memory.state || this.memory.state == 'none') this.judgeState();
 
-        if(this.memory.state == 'tower') this.fillTower();
+        if(this.memory.state == 'tower') {
+            this.fillTower();
+            return;
+        }
+        if(this.memory.state == 'link') {
+            this.link();
+            return;
+        }
 
         if(!this.terminal) {
             this.clearState();
@@ -296,9 +303,6 @@ export class RoleManager extends Role{
         }
 
         switch (this.memory.state) {
-            case 'link':
-                this.link();
-                break;
             case 'ps':
                 this.fillPowerSpawn();
                 break;
@@ -339,6 +343,17 @@ export class RoleManager extends Role{
             return;
         }
 
+        let upLink = Game.getObjectById<StructureLink>(this.room.memory.upgradeLink);
+        let link = Game.getObjectById<StructureLink>(this.room.memory.centerLink);
+        if(upLink && link && upLink.store.energy < 600){
+            this.setState('link');
+            return;
+        }
+        if(link && link.store.energy > 0){
+            this.setState('link');
+            return;
+        }
+
         if(!this.terminal) return;
 
         let labs = new RoomPlanner(this.room.name).getLabs();
@@ -353,16 +368,6 @@ export class RoleManager extends Role{
             return;
         }
 
-        let upLink = Game.getObjectById<StructureLink>(this.room.memory.upgradeLink);
-        let link = Game.getObjectById<StructureLink>(this.room.memory.centerLink);
-        if(upLink && link && upLink.store.energy < 600){
-            this.setState('link');
-            return;
-        }
-        if(link && link.store.energy > 0){
-            this.setState('link');
-            return;
-        }
         if(Game.shard.name == 'shard0') return;
         let powerSpawn = this.room.powerSpawn;
         if(powerSpawn) {
@@ -372,17 +377,17 @@ export class RoleManager extends Role{
             }
         }
 
-        // let nuker = this.room.nuker;
-        // if(nuker) {
-        //     if(nuker.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && this.storage.store.energy) {
-        //         this.setState('nuker');
-        //         return;
-        //     }
-        //     if(this.terminal.store.G && nuker.store.getFreeCapacity(RESOURCE_GHODIUM)) {
-        //         this.setState('nuker');
-        //         return;
-        //     }
-        // }
+        let nuker = this.room.nuker;
+        if(nuker) {
+            if(nuker.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && this.storage.store.energy) {
+                this.setState('nuker');
+                return;
+            }
+            if(this.terminal.store.G && nuker.store.getFreeCapacity(RESOURCE_GHODIUM)) {
+                this.setState('nuker');
+                return;
+            }
+        }
 
         if(this.terminal.store.ops || this.storage.store.getUsedCapacity() - this.storage.store.energy - this.storage.store.getUsedCapacity(RESOURCE_OPS) > 0) {
             this.setState('correct');
@@ -472,7 +477,6 @@ export class RoleManager extends Role{
     link() {
         let link = Game.getObjectById<StructureLink>(this.room.memory.centerLink);
         let upLink = Game.getObjectById<StructureLink>(this.room.memory.upgradeLink);
-
         if(upLink && link && upLink.store.energy < 600){
             let remain = upLink.store.getCapacity(RESOURCE_ENERGY) - upLink.store.energy - link.store.energy;
             if(remain <= 0) { link.transferEnergy(upLink); return; }
@@ -664,8 +668,8 @@ export class RoleManager extends Role{
         let transport = market.transport;
         if(transport){
             let tstore = this.terminal.store.getUsedCapacity(transport.type);
-            this.get(this.storage, transport.type);
-            this.transfer(this.terminal, transport.type);
+            if(!this.creep.store.getUsedCapacity(transport.type)) this.get(this.storage, transport.type, transport.amount - this.terminal.store.getUsedCapacity(transport.type));
+            else this.transfer(this.terminal, transport.type, transport.amount - this.terminal.store.getUsedCapacity(transport.type));
             let fare = Game.market.calcTransactionCost(transport.amount, roomName, transport.des);
             if(tstore >= transport.amount + (transport.type == RESOURCE_ENERGY ? fare : 0)) {
                 this.terminal.send(transport.type, transport.amount, transport.des);

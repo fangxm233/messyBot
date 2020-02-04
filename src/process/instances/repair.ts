@@ -87,7 +87,6 @@ export class ProcessRepair extends Process{
     }
 
     run() {
-        let process = Process.getProcess(this.fullId);
         this.foreachCreep(()=>{});
         let creeps = _.groupBy(_.map(this.creeps, creepName => Game.creeps[creepName]), creep => creep.memory.role);
         if(!creeps['repairer']) creeps['repairer'] = [];

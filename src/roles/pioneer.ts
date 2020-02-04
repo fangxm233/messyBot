@@ -4,6 +4,7 @@ import { SourceManager } from '../programs/sourceManager';
 import { profile } from '../profiler/decorator';
 import { RoomPlanner } from '../roomPlanner/RoomPlanner';
 import { structureLayout } from '../roomPlanner/building';
+import { refreshRoomPosition } from '../utils';
 
 @profile
 export class RolePioneer extends Role{
@@ -108,6 +109,7 @@ export class RolePioneer extends Role{
                 }
     
                 let pos = this.creep.memory.allotUnit.data.pos;
+                pos = refreshRoomPosition(pos);
                 if(!this.creep.memory.sourceId){
                     let sources = pos.findInRange(FIND_SOURCES, 0);
                     if(sources.length) this.creep.memory.sourceId = sources[0].id;

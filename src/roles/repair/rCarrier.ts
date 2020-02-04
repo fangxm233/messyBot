@@ -15,7 +15,7 @@ export class RoleRCarrier extends Role{
 
     run() {
         let repairer = Game.creeps[this.repairerName];
-        if(!repairer) {
+        if(!repairer || repairer.room.name != this.creep.room.name) {
             this.repairerName = '';
             return;
         }

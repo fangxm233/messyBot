@@ -50,6 +50,16 @@ export const loop = ErrorMapper.wrapLoop(() => {
     let t2 = Game.cpu.getUsed();
     rebuildMemory(same && !reset);
     let t3 = Game.cpu.getUsed();
+
+    try {// 并不信任外来js
+        // 看你自己要啥，房号填好了
+        labCtrl.run('E17N31', RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE, 5e4);
+    } catch (error) {
+        if(!error.stack) 
+            throw error;
+        console.log(`<span style='color:red'>${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
+    }
+
     Command.run();
     Alloter.setDirty();
     Statistics.recordCreditChange();

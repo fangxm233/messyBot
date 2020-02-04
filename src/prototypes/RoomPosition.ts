@@ -6,7 +6,8 @@ RoomPosition.prototype.getMultiRoomRangeTo = function(pos: RoomPosition): number
 		const to = pos.roomCoords;
 		const dx = Math.abs(50 * (to.x - from.x) + pos.x - this.x);
 		const dy = Math.abs(50 * (to.y - from.y) + pos.y - this.y);
-		return Math.max(dx, dy) - (1 / (Math.min(dx, dy) + 1.1)) + 1;
+		return Math.max(dx, dy);
+		// return Math.max(dx, dy) - (1 / (Math.min(dx, dy) + 1.1)) + 1;
 	// }
 };
 
@@ -44,7 +45,7 @@ RoomPosition.prototype.isWalkable = function(ignoreCreeps = false, ignoreStructu
 	if (Game.map.getRoomTerrain(this.roomName).get(this.x, this.y) == TERRAIN_MASK_WALL) return false;
 	if (this.isVisible) {
 		// Are there creeps?
-		if (ignoreCreeps == false && this.lookFor(LOOK_CREEPS).length > 0) return false;
+		if (ignoreCreeps == false && (this.lookFor(LOOK_CREEPS).length > 0 || this.lookFor(LOOK_POWER_CREEPS).length > 0)) return false;
 		// Are there structures?
 		if (ignoreStructures == false && _.filter(this.lookFor(LOOK_STRUCTURES), (s: Structure) => !s.isWalkable).length > 0) return false;
 		// Are there unwalkable constructionSites?

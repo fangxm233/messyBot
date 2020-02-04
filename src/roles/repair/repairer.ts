@@ -17,7 +17,7 @@ export class RoleRepairer extends Role{
 
     run() {
         let carrier = Game.creeps[this.rCarrierName];
-        if(!carrier) this.rCarrierName = '';
+        if(!carrier || carrier.room.name != this.creep.room.name) this.rCarrierName = '';
         if(Game.time % this.process.timeOut == 0) this.target = '' as any;
         let controller = this.creep.room.controller;
         if(!controller) return;
@@ -29,7 +29,7 @@ export class RoleRepairer extends Role{
 
         if(this.creep.store.energy) {
             if(!this.target) this.target = _.min(this.creep.room.ramparts.filter(
-                r => r.hits < r.targetHits && (this.process.type != 'defend' || !r.pos.inRangeTo(controller as any, 1))), r => r.hits).id;
+                r => r.hits < r.targetHits), r => r.hits).id; //&& (this.process.type != 'defend' || !r.pos.inRangeTo(controller as any, 1))
             if(!this.target) this.target = _.min(this.creep.room.ramparts, r => r.hits).id;
             let rampart = Game.getObjectById(this.target);
             if(!rampart) {

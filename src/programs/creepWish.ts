@@ -48,4 +48,5 @@ export const rolePriority: {
     coreDis: 22,
     hauler: 23,
     pioneer: 24,
+    cAttack: 25,
 }

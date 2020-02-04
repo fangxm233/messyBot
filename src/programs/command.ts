@@ -87,6 +87,13 @@ export class Command{
                 if(flag.name.match('ar') || flag.name.match('ad')) {
                     let roomName = flag.name.split('_')[0];
                     if(!Process.getProcess(roomName, 'attack', 'targetRoom', flag.pos.roomName)) Porcesses.processAttack(roomName, flag.pos.roomName);
+                    continue;
+                }
+                if(flag.name.match('ac')) {
+                    let roomName = flag.name.split('_')[0];
+                    let creepNum = Number.parseInt(flag.name.split('_')[2]);
+                    if(!Process.getProcess(roomName, 'attackController', 'targetRoom', flag.pos.roomName)) Porcesses.processAttackController(roomName, flag.pos.roomName, creepNum);
+                    continue;
                 }
                 if(!flag.room) continue;
                 let room = flag.room;

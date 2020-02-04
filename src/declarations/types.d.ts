@@ -169,6 +169,10 @@ type ProcessAttackDestroyInterface = ProcessInterface & {
 	targetRoom: string;
 	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
 }
+type ProcessAttackControllerInterface = ProcessInterface & {
+	targetRoom: string;
+	creepNum: number;
+}
 
 interface RoomStableMemory {
 	finished: boolean;

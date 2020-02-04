@@ -3,6 +3,7 @@ import { RoleManager } from "./manager";
 import { isPowerEffect, isStoreStructure } from "../declarations/typeGuards";
 import { Process } from "../process/process";
 import { Traveler } from "../programs/Traveler";
+import { RoomPlanner } from "../roomPlanner/RoomPlanner";
 
 @profile
 export class RolePC{
@@ -14,6 +15,7 @@ export class RolePC{
 
     run(){
         if(this.creep.name == 'PC_WAR') this.runWar();
+        else if(this.creep.name.match('ATANNER')) this.runAtanner();
         else this.runNormal();
 
         // if(this.creep.powers[PWR_OPERATE_POWER] && this.creep.powers[PWR_OPERATE_POWER].cooldown == 0 && room.powerSpawn){
@@ -154,6 +156,16 @@ export class RolePC{
                 return;
             } else this.creep.memory.lastEnergy = room.energyAvailable;
         }
+
+        // if(this.creep.powers[PWR_OPERATE_LAB]) {
+        //     let rp = new RoomPlanner(room.name);
+        //     let lab = rp.getProductLabs().filter(lab => !lab.effects || !lab.effects.length)[0];
+        //     if(lab) {
+        //         if(!this.creep.pos.inRangeTo(lab, 3)) this.creep.travelTo(lab, { offRoad: true, range: 3 });
+        //         else this.creep.usePower(PWR_OPERATE_LAB, lab);
+        //         return;
+        //     }
+        // }
     }
 
     runWar() {
@@ -167,20 +179,6 @@ export class RolePC{
         let process = Process.getProcess(room.name, 'activeDefend');
         if(process && process.state == 'active') defendMode = true;
         if(Process.getProcess(room.name, 'attack')) warMode = true;
-
-        let r = Game.rooms['W12N9'];
-        if(r && r.find(FIND_NUKES).length) {
-            if(_.min(r.find(FIND_NUKES), rr => rr.timeToLand).timeToLand < 200) {
-                this.creep.travelTo(new RoomPosition(48, 47, 'W13N9'));
-                return;
-            }
-        } else {
-            if(room.name == 'W13N9') {
-                this.creep.travelTo(new RoomPosition(25, 25, 'W12N9'));
-                return;
-            }
-            if(this.creep.pos.isEdge) Traveler.avoidEdge(this.creep as any);
-        }
 
         if(this.creep.ticksToLive && this.creep.ticksToLive < 4000 && room.powerSpawn){
             if(!this.creep.pos.inRangeTo(room.powerSpawn, 1)) this.creep.travelTo(room.powerSpawn, { offRoad: true });
@@ -213,14 +211,14 @@ export class RolePC{
         }
 
         if(this.creep.powers[PWR_OPERATE_SPAWN]) {
-            if(warMode || defendMode) {
+            // if(warMode || defendMode) {
                 let spawn = room.spawns.filter(spawn => !spawn.effects || !spawn.effects.length)[0];
                 if(spawn) {
                     if(!this.creep.pos.inRangeTo(spawn, 3)) this.creep.travelTo(spawn, { offRoad: true, range: 3 });
                     else this.creep.usePower(PWR_OPERATE_SPAWN, spawn);
                     return;
                 }
-            }
+            // }
         }
 
         if(this.creep.powers[PWR_OPERATE_EXTENSION] && room.storage){
@@ -243,6 +241,90 @@ export class RolePC{
                     else this.creep.usePower(PWR_OPERATE_TOWER, tower);
                     return;
                 }
+            }
+        }
+    }
+
+    runAtanner() {
+        let room = this.creep.room;
+        let controller = room ? room.controller : undefined;
+        if(!room) return;
+
+        let pbRoom = 'W4N10';
+
+        let ticksToLive = this.creep.ticksToLive;
+        if(!ticksToLive) return;
+        if(ticksToLive < 400) {
+            if(room.name != pbRoom) {
+                this.creep.travelTo(new RoomPosition(25, 25, pbRoom), {preferHighway: true});
+                return;
+            }
+            let pb = this.creep.pos.findClosestByRange(room.powerBanks);
+            if(pb) {
+                if(!this.creep.pos.inRangeTo(pb, 1)) this.creep.travelTo(pb);
+                else this.creep.renew(pb);
+                return;
+            }
+            return;
+        }
+
+        if(this.creep.store.getUsedCapacity(RESOURCE_OPS) < 20) {
+            if(room.name == 'W12N9') {
+                let storage = room.storage;
+                if(storage && storage.store.getUsedCapacity(RESOURCE_OPS) && this.creep.store.getUsedCapacity(RESOURCE_OPS) < this.creep.store.getCapacity() * 0.5){
+                    if(!this.creep.pos.inRangeTo(storage, 1)) this.creep.travelTo(storage);
+                    else this.creep.withdraw(storage, RESOURCE_OPS, this.creep.store.getCapacity() * 0.5 - this.creep.store.getUsedCapacity(RESOURCE_OPS));
+                    return;
+                }        
+            } else {
+                if(room.name != 'W2N10') {
+                    this.creep.travelTo(new RoomPosition(25, 25, 'W2N10'), {preferHighway: true});
+                    return;
+                }
+                let container = this.creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: creep => creep.name.match('container')});
+                if(container) {
+                    if(!this.creep.pos.inRangeTo(container, 1)){
+                        this.creep.travelTo(container);
+                        return;
+                    }
+                    return;
+                }
+                if(this.creep.pos.isEdge) {
+                    Traveler.avoidEdge(this.creep as any);
+                }
+            }
+            return;
+        }
+
+        if(room.name != 'W2N11') {
+            this.creep.travelTo(new RoomPosition(25, 25, 'W2N11'));
+            return;
+        }
+        if(this.creep.pos.isEdge) {
+            Traveler.avoidEdge(this.creep as any);
+            return;
+        }
+
+        if(this.creep.hits < this.creep.hitsMax) {
+            this.creep.usePower(PWR_SHIELD);
+        }
+
+        if(this.creep.powers[PWR_DISRUPT_SPAWN]) {
+            let spawns = room.spawns.filter(spawn => {
+                if(!spawn.effects || !spawn.effects.length) return true;
+                if(!spawn.spawning) return false;
+                return !_.some(spawn.effects, e => e.effect == PWR_DISRUPT_SPAWN && e.ticksRemaining > 2);
+            });
+            let spawn = _.min(spawns, spawn => {
+                let effect = _.find(spawn.effects, effect => effect.effect = PWR_DISRUPT_SPAWN);
+                if(!effect) return 0;
+                return effect.ticksRemaining;
+            });
+            if(spawn) {
+                if(!this.creep.pos.inRangeTo(spawn, 20)) {
+                    this.creep.travelTo(spawn);
+                    return;
+                } else this.creep.usePower(PWR_DISRUPT_SPAWN, spawn);
             }
         }
     }

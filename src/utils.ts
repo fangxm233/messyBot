@@ -124,6 +124,7 @@ export function calTowerDamage(dist: number) {
 
 export function possibleTowerDamage(room: Room, pos: RoomPosition): number{
     return _.sum(room.towers, tower => {
+        if(tower.store.energy < 10) return 0;
         let ratio = 1;
         if(tower.effects && tower.effects.length) tower.effects.forEach(effect => {
             if(effect.effect == PWR_OPERATE_TOWER) ratio = POWER_INFO[effect.effect].effect[effect.level];

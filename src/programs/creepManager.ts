@@ -145,27 +145,34 @@ export class CreepManager {
         let avaEnergy = room.energyAvailable;
         let capEnergy = room.energyCapacityAvailable;
         if (creeps['filler'] < Alloter.getUnitCount(ALLOT_FILLER, room.name)) capEnergy = Math.max(avaEnergy, 300);
-        if (creeps['harvester'] == 0 && room.memory.noEnergyAvailable) capEnergy = Math.max(avaEnergy, 300);
-        if(room.name == 'W12N9' && creeps['filler'] != 3) console.log(creeps['filler']);
+        // if (creeps['harvester'] == 0 && room.memory.noEnergyAvailable) capEnergy = Math.max(avaEnergy, 300);
 
         let wishCreep = CreepWish.getWish(room.name);
         let wishCreepRole = '';
         if(wishCreep) wishCreepRole = wishCreep.role;
 
-        //dismantler
-        if(wishCreepRole == 'dismantler' || Memory.gotoDismantle && Memory.dismantlerRoom == room.name && creeps['dismantler'] < 2){
-            this.spawnInfo = undefined;
-            let id = CreepManager.getId('dismantler');
-            this.setInfo(this.getBodies(['w1', 'm1'], capEnergy), 'dismantler_' + id, 
-            { memory: this.getMemory('dismantler', id, room.name) });
-        }
-
         //hauler
-        if(wishCreepRole == 'hauler' || Memory.gotoHaul && Memory.haulerRoom == room.name && creeps['hauler'] < 4){
+        if(wishCreepRole == 'hauler' || Memory.gotoHaul && Memory.haulerRoom == room.name && creeps['hauler'] < 3){//8
             this.spawnInfo = undefined;
             let id = CreepManager.getId('hauler');
             this.setInfo(this.getBodies(['c1', 'm1'], capEnergy), 'hauler_' + id, 
             { memory: this.getMemory('hauler', id, room.name) });
+        }
+
+        //dismantler
+        if(wishCreepRole == 'dismantler' || Memory.gotoDismantle && Memory.dismantlerRoom == room.name && creeps['dismantler'] < 2){//3
+            this.spawnInfo = undefined;
+            let id = CreepManager.getId('dismantler');
+            this.setInfo(this.getBodies(['c49', 'm1'], capEnergy), 'pcontainer_' + id, 
+            { memory: this.getMemory('dismantler', id, room.name) });
+        }
+
+        // wish cAttack
+        if(wishCreepRole == 'cAttack') {
+            this.spawnInfo = undefined;
+            let id = CreepManager.getId('cAttack');
+            this.setInfo(this.getBodies(['C1', 'm1'], capEnergy), 'cAttack_' + id,
+            {memory: this.getMemory('cAttack', id, room.name) });
         }
 
         //pioneer
