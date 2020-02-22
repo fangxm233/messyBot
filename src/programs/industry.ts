@@ -138,9 +138,9 @@ export class Industry {
                     if (_.some(level2Commodities[level], product => {
                         if (this.getStock(product, room.name) >= this.getTargetStock(product)) return false;
                         return this.produce(product, this.getOnceAmount(product), room.name)
-                    })) break;
+                    })) continue;
                 }
-                if (_.some(level2Commodities[0], product => this.produce(product, 200, room.name))) break;
+                if (_.some(level2Commodities[0], product => this.produce(product, 200, room.name))) continue;
             }
         }
     }
