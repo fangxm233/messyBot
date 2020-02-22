@@ -13,12 +13,12 @@ export class RoleDHarvester extends Role{
     run(){
         if(this.creep.room.name != this.targetName){
             let room = Game.rooms[this.targetName];
-            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS)[0], {preferHighway: true});
+            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0], {preferHighway: true});
             else this.creep.travelTo(new RoomPosition(25, 25, this.targetName), {preferHighway: true});
             return;
         }
 
-        let deposit = this.creep.room.find(FIND_DEPOSITS)[0];
+        let deposit = this.creep.room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0];
         if(!deposit) return;
         if(!this.creep.pos.isNearTo(deposit)) {
             this.creep.travelTo(deposit, {preferHighway: true});

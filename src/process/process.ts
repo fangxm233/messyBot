@@ -172,7 +172,7 @@ export class Process{
     //     return _.find(processes, process => process.processName == name && process[key] === value);
     // }
 
-    static startPorcess(process: Process): string{
+    static startProcess(process: Process): string{
         if(!this.processes[process.roomName]) this.processes[process.roomName] = {};
         if(!Memory.processes[process.roomName]) Memory.processes[process.roomName] = [];
         if(!this.process_Type[process.processName]) this.process_Type[process.processName] = {};
@@ -203,7 +203,7 @@ export class Process{
         return -1;
     }
 
-    static runAllPorcesses(){
+    static runAllProcesses(){
         for (const processName in this.process_Type) {
             const processes = this.process_Type[processName];
             _.forEach(processes, process => {

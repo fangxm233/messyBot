@@ -16,7 +16,7 @@ export class RoleContainer extends Role{
     run(){
         if(this.creep.room.name != this.targetName){
             let room = Game.rooms[this.targetName];
-            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS)[0], {preferHighway: true});
+            if(room) this.creep.travelTo(room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0], {preferHighway: true});
             else this.creep.travelTo(new RoomPosition(25, 25, this.targetName), {preferHighway: true});
             return;
         }
@@ -30,6 +30,8 @@ export class RoleContainer extends Role{
             this.creep.pickup(resource);
             return;
         }
+        let tombs = this.creep.room.find(FIND_TOMBSTONES, {filter: tomb => !!tomb.store[this.type] && this.creep.pos.inRangeTo(tomb, 1)});
+        if(tombs.length) this.creep.withdraw(tombs[0], this.type);
         if(!harvester) return;
         if(!this.creep.pos.isNearTo(harvester)) this.creep.travelTo(harvester, {preferHighway: true});
     }

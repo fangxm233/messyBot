@@ -2,7 +2,7 @@ import { towerRepairLine } from "../config";
 import { profile } from "../profiler/decorator";
 import { hasAggressiveBodyParts, possibleTowerDamage, wouldBreakDefend } from "../utils";
 import { Process } from "../process/process";
-import { Porcesses } from "../process/processes";
+import { Processes } from "../process/processes";
 
 @profile
 export class Tower {
@@ -32,7 +32,9 @@ export class Tower {
                 return creep.hits < creep.hitsMax;
             }
         });
-        let enemies = room.find(FIND_HOSTILE_CREEPS, {filter: creep => hasAggressiveBodyParts(creep, false)});
+        let enemies: AnyCreep[] = room.find(FIND_HOSTILE_CREEPS, {filter: creep => hasAggressiveBodyParts(creep, false)});
+        enemies.concat(room.find(FIND_HOSTILE_POWER_CREEPS));
+
         let timeLeft = 0;
         for (const enemy of enemies) 
             if(enemy.ticksToLive && enemy.ticksToLive > timeLeft) timeLeft = enemy.ticksToLive;
@@ -67,8 +69,8 @@ export class Tower {
                 Memory.rooms[tower.pos.roomName].underAttacking = true;
                 Memory.rooms[tower.pos.roomName].timeLeft = timeLeft;
                 Memory.UnderAttacking = true;
-                let playerEnemies = enemies.filter(creep => creep.owner.username != 'Invader' && hasAggressiveBodyParts(creep, false));
-                if(playerEnemies.length && !Process.getProcess(room.name, 'activeDefend')) Porcesses.processActiveDefend(room.name);
+                let playerEnemies = enemies.filter(creep => creep.owner.username != 'Invader' && this.isDangerous(creep));
+                if(playerEnemies.length && !Process.getProcess(room.name, 'activeDefend')) Processes.processActiveDefend(room.name);
                 if(isc) continue;
             }
             else{
@@ -100,11 +102,24 @@ export class Tower {
         room.towers.forEach(tower => tower.attack(creep));
         return true;
     }
+
+    static isDangerous(target: AnyCreep): boolean {
+        if(target instanceof PowerCreep) return true;
+        if(hasAggressiveBodyParts(target, false)) return true;
+        return false;
+    }
     
-    static solveCanBeAttack(room: Room, targets: Creep[]) {
+    static solveCanBeAttack(room: Room, targets: AnyCreep[]) {
         for (let target of targets) {
             let towerAttack = possibleTowerDamage(room, target.pos);
-            if(wouldBreakDefend(target.body, target.pos, target.owner.username, towerAttack)) return target;
+            if(target.inRampart && target instanceof PowerCreep && target.store.energy >= 100 && target.powers[PWR_SHIELD]) {
+                let level = target.powers[PWR_SHIELD].level;
+                let power = POWER_INFO[PWR_SHIELD].effect[level] / POWER_INFO[PWR_SHIELD].cooldown;
+                if(power < towerAttack) return target;
+                continue;
+            }
+            if(wouldBreakDefend(target instanceof PowerCreep ? [] : target.body, target.pos, target.owner.username, towerAttack)) 
+                return target;
         }
         return undefined;
     }

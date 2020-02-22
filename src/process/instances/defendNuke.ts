@@ -1,7 +1,7 @@
 import { Process } from "../process";
 import { profile } from "../../profiler/decorator";
 import { ProcessRepair } from "./repair";
-import { Porcesses } from "../processes";
+import { Processes } from "../processes";
 
 @profile
 export class ProcessDefendNuke extends Process{
@@ -30,7 +30,7 @@ export class ProcessDefendNuke extends Process{
         }
 
         let processRepair = Process.getProcess(this.roomName, 'repair') as ProcessRepair;
-        if(!processRepair) Porcesses.processRepair(this.roomName, 'defend');
+        if(!processRepair) Processes.processRepair(this.roomName, 'defend');
         else if(processRepair.type == 'normal') processRepair.setType('defend');
 
         this.suspend();

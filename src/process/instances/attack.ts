@@ -1,6 +1,6 @@
 import { Process } from "../process";
 import { profile } from "../../profiler/decorator";
-import { Porcesses } from "../processes";
+import { Processes } from "../processes";
 import { RoleFactory } from "../../roles/roleFactory";
 import { RoleWarrior } from "../../roles/attack/warrior";
 import { RoleDestroyer } from "../../roles/attack/destroyer";
@@ -13,7 +13,7 @@ import { USER_NAME } from "../../config";
 import { ErrorMapper } from "../../utils/ErrorMapper";
 
 const roleToCompounds = {
-    'warrior': ['XKHO2', 'XZHO2', 'XGHO2'],
+    'warrior': ['XKHO2', 'XZHO2', 'XGHO2'],//XKHO2 //XUH2O
     'destroyer': ['XZH2O', 'XZHO2', 'XGHO2'],
     'healer': ['XLHO2', 'XZHO2', 'XGHO2']
 };
@@ -163,7 +163,7 @@ export class ProcessAttack extends Process{
                 return false;
             }
             if(!creep.spawning && this.boostFlag[creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost')) {
-                Porcesses.processBoost(this.roomName, roleToCompounds[role], creep.name, this.fullId);
+                Processes.processBoost(this.roomName, roleToCompounds[role], creep.name, this.fullId);
                 this.boostFlag[creep.name] = 'boosting';
                 return;
             }
@@ -229,16 +229,17 @@ export class ProcessAttack extends Process{
     getTargets(pos: RoomPosition, creep?: boolean): (AnyStructure | Creep | ConstructionSite)[] {
         let room = Game.rooms[this.targetRoom];
         if(!room) return [];
+        if(room.extensions.filter(structure => !structure.my).length) return room.extensions.filter(structure => !structure.my);
+        if(room.terminal && !room.terminal.my) return [room.terminal];
         let easyTargets = room.structures.filter(structure => !structure.pos.lookForStructure(STRUCTURE_RAMPART) && 
             structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART && 
             structure.structureType != STRUCTURE_ROAD && structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_CONTROLLER && 
             structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL 
-            && !structure.my);
+            && structure.structureType != STRUCTURE_LINK && !structure.my);
         if(easyTargets.length) return easyTargets;
         if(room.spawns.filter(structure => !structure.my).length) return room.spawns.filter(structure => !structure.my);
         if(room.towers.filter(structure => !structure.my).length) return room.towers.filter(structure => !structure.my);
         if(room.storage && !room.storage.my) return [room.storage];
-        // if(room.terminal && !room.terminal.my) return [room.terminal];
         if(room.nuker && !room.nuker.my) return [room.nuker];
         if(room.invaderCore) return [room.invaderCore];
         if(room.extensions.filter(structure => !structure.my).length) return room.extensions.filter(structure => !structure.my);

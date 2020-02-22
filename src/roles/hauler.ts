@@ -25,7 +25,7 @@ export class RoleHauler extends Role {
             }
             return;
         }
-
+        this.creep.say('hi')
         let storage = Game.rooms['W12N9'].storage;
         if(storage) {
             if(!this.creep.pos.isNearTo(storage)) this.creep.travelTo(storage);

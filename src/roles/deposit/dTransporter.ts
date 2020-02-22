@@ -27,7 +27,7 @@ export class RoleDTransporter extends Role{
 
             if(this.creep.room.name != this.targetName){
                 let room = Game.rooms[this.targetName];
-                if(room) this.creep.travelTo(room.find(FIND_DEPOSITS)[0], {preferHighway: true});
+                if(room) this.creep.travelTo(room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0], {preferHighway: true});
                 else this.creep.travelTo(new RoomPosition(25, 25, this.targetName));
                 if(!this.creep.memory.dis && this.creep.memory._trav.path) this.creep.memory.dis = this.creep.memory._trav.path.length;
                 return;
@@ -35,7 +35,7 @@ export class RoleDTransporter extends Role{
 
             let containerCreep = this.creep.room.find(FIND_MY_CREEPS, { filter: creep => creep.memory.role == 'container' })[0];
             if(!containerCreep) return;
-            let deposit = this.creep.room.find(FIND_DEPOSITS)[0];
+            let deposit = this.creep.room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0];
             if(!deposit) return;
             
             if(!this.creep.pos.isNearTo(containerCreep)) this.creep.travelTo(containerCreep, {preferHighway: true});

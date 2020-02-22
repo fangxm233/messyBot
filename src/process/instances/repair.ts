@@ -5,7 +5,7 @@ import { RoleRepairer } from "../../roles/repair/repairer";
 import { RoleRCarrier } from "../../roles/repair/rCarrier";
 import { CreepWish } from "../../programs/creepWish";
 import { ProcessBoost } from "./boost";
-import { Porcesses } from "../../process/processes";
+import { Processes } from "../../process/processes";
 
 @profile
 export class ProcessRepair extends Process{
@@ -63,8 +63,8 @@ export class ProcessRepair extends Process{
             this.groupNum = 3;
             this.suspendBucket = 1000;
             this.activeBucket = 2000;
-            this.suspendEnergy = 200000;
-            this.activeEnergy = 220000;
+            this.suspendEnergy = 100000;
+            this.activeEnergy = 120000;
             this.targetHit = 2e7;
         }
     }
@@ -121,7 +121,7 @@ export class ProcessRepair extends Process{
         repairers.forEach((role) => {
             if(this.type == 'defend' && !role.creep.spawning && this.boostFlag[role.creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost') 
                 && ProcessBoost.enoughToBoost(this.roomName, ['XLH2O'], role.creep)) {
-                Porcesses.processBoost(this.roomName, ['XLH2O'], role.creep.name, this.fullId);
+                Processes.processBoost(this.roomName, ['XLH2O'], role.creep.name, this.fullId);
                 this.boostFlag[role.creep.name] = 'boosting';
                 return;
             }

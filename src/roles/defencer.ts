@@ -21,8 +21,7 @@ export class RoleDefencer extends Role{
     }
 
     runDefencer(invaders: Creep[], wounded: Creep[]){
-        if(this.creep.hits < this.creep.hitsMax && 
-            !this.creep.room.find(FIND_HOSTILE_CREEPS, { filter: inveder => inveder.pos.getRangeTo(this.creep) <= 3}).length) this.creep.heal(this.creep);
+        if(this.creep.hits < this.creep.hitsMax) this.creep.heal(this.creep);
 
         let room = Game.rooms[this.targetName];
         if(!room){
@@ -37,8 +36,7 @@ export class RoleDefencer extends Role{
         if(invaders.length){
             let target = this.creep.pos.findClosestByRange(invaders);
             if(target){
-                this.creep.rangedAttack(target);
-                this.creep.attack(target);    
+                if(this.creep.pos.inRangeTo(target, 3)) this.creep.rangedAttack(target);    
                 this.creep.moveTo(target, { ignoreRoads: true });
             }
             return;

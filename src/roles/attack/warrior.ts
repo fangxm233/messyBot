@@ -21,11 +21,13 @@ export class RoleWarrior extends Role {
     prepared = false;
 
     run() {
+
         let memory = this.creep.memory;
         let targetRoom = this.process.targetRoom;
         let room = Game.rooms[targetRoom];
         _.remove(memory.healerName, name => !Game.creeps[name]);
         this.healers = _.map(memory.healerName, name => Game.creeps[name]);
+
         if (this.healers.length < healerNumPerGroup && !this.prepared) return;
         this.prepared = true;
 
@@ -122,7 +124,7 @@ export class RoleWarrior extends Role {
                     return;
                 }
             }
-            this.creep.travelTo(nowTarget, { range: range, repath: 0.5, ignoreCreeps: true, freshMatrix: true });
+            this.creep.travelTo(nowTarget, { range: range, repath: 0.5, ignoreCreeps: false, freshMatrix: true, pushCreep: true });
             if (dir) {
                 this.healers.forEach(healer => {
                     let role = RoleFactory.getRole(healer) as RoleHealer;
@@ -132,10 +134,12 @@ export class RoleWarrior extends Role {
         }
 
         else this.creep.rangedMassAttack();
+
+        global[this.creep.name] = this;
     }
 
     attack(): boolean {
-        let creeps = this.creep.pos.findInRange(FIND_HOSTILE_CREEPS, 2).filter(creep => !creep.inRampart);
+        let creeps = this.creep.pos.findInRange(FIND_HOSTILE_CREEPS, 1).filter(creep => !creep.inRampart);
         if (creeps.length > 1) {
             this.creep.rangedMassAttack();
             return true;

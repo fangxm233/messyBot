@@ -3,7 +3,7 @@ import { profile } from "../../profiler/decorator";
 import { Traveler } from "../../programs/Traveler";
 import { isOutOfRoom, hasAggressiveBodyParts } from "../../utils";
 import { RoomPlanner } from "../../roomPlanner/RoomPlanner";
-import { Porcesses } from "../processes";
+import { Processes } from "../processes";
 import { ProcessRepair } from "./repair";
 import { CreepWish } from "../../programs/creepWish";
 import { ProcessBoost } from "./boost";
@@ -77,7 +77,7 @@ export class ProcessActiveDefend extends Process{
         this.refreshCostMatrix();
 
         let processRepair = Process.getProcess(this.roomName, 'repair') as ProcessRepair;
-        if(!processRepair) Porcesses.processRepair(this.roomName, 'defend');
+        if(!processRepair) Processes.processRepair(this.roomName, 'defend');
         else if(processRepair.type == 'normal') processRepair.setType('defend');
         
         let creepNum = this.invaders.length / 2;
@@ -92,7 +92,7 @@ export class ProcessActiveDefend extends Process{
         let role = RoleFactory.getRole(creep, creep => new RoleMelee(creep)) as RoleMelee;
         if(!creep.spawning && this.boostFlag[creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost') 
             && ProcessBoost.enoughToBoost(this.roomName, ['XUH2O', 'XZHO2'], creep)) {
-            Porcesses.processBoost(this.roomName, ['XUH2O', 'XZHO2'], creep.name, this.fullId);
+            Processes.processBoost(this.roomName, ['XUH2O', 'XZHO2'], creep.name, this.fullId);
             this.boostFlag[creep.name] = 'boosting';
             return;
         }

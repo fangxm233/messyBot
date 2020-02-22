@@ -15,70 +15,70 @@ import { ProcessAttack } from "./instances/attack";
 import { ProcessAttackController } from "./instances/attackController";
 
 @profile
-export class Porcesses{
+export class Processes{
     static processFilling(roomName: string): ProcessFilling{
         let process = new ProcessFilling(roomName);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processMining(roomName: string): ProcessMining{
         let process = new ProcessMining(roomName);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processMinePower(roomName: string, targetName: string): ProcessMinePower{
         let process = new ProcessMinePower(roomName, targetName);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processMineDeposit(roomName: string, targetName: string, type: DepositConstant): ProcessMineDeposit{
         let process = new ProcessMineDeposit(roomName, targetName, type);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processDefend(roomName: string, targetName: string, type: 'creep' | 'coreDis'): ProcessDefend{
         let process = new ProcessDefend(roomName, targetName, type);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processRepair(roomName: string, type: 'normal' | 'defend'): ProcessRepair{
         let process = new ProcessRepair(roomName, type);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processBoost(roomName: string, compoundTypes: MineralBoostConstant[], creepName: string, processId: string): ProcessBoost{
         let process = new ProcessBoost(roomName, compoundTypes, creepName, processId);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processActiveDefend(roomName: string): ProcessActiveDefend{
         let process = new ProcessActiveDefend(roomName);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processDefendNuke(roomName: string): ProcessDefendNuke{
         let process = new ProcessDefendNuke(roomName);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processAttack(roomName: string, targetRoom: string): ProcessAttack{
         let process = new ProcessAttack(roomName, targetRoom);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
     static processAttackController(roomName: string, targetRoom: string, creepNum: number): ProcessAttackController{
         let process = new ProcessAttackController(roomName, targetRoom, creepNum);
-        Process.startPorcess(process);
+        Process.startProcess(process);
         return process;
     }
 
@@ -91,9 +91,9 @@ export class Porcesses{
             for (const powerRoomName of rooms) {
                 if(!intel[powerRoomName]) continue;
                 let i = intel[powerRoomName];
-                if(i.powerBank && i.powerBank.ticks > 4000){// && i.powerBank.amount > 3000
+                if(i.powerBank && i.powerBank.ticks > 4000 && i.powerBank.amount > 3000){
                     if(Process.getProcess(roomName, 'minePower', 'targetName', powerRoomName)) continue;
-                    Porcesses.processMinePower(roomName, powerRoomName);
+                    Processes.processMinePower(roomName, powerRoomName);
                 }
             }
         }
@@ -111,7 +111,7 @@ export class Porcesses{
                 if(i.deposit && i.deposit.cooldown < 100){
                     if(terminal.store.getUsedCapacity(i.deposit.type) >= 70000) break;
                     if(Process.getProcess(roomName, 'mineDeposit', 'targetName', depositRoomName)) continue;
-                    Porcesses.processMineDeposit(roomName, depositRoomName, i.deposit.type);
+                    Processes.processMineDeposit(roomName, depositRoomName, i.deposit.type);
                 }
             }
         }

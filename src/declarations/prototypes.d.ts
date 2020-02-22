@@ -2,6 +2,7 @@ interface Game{
 	industry: {
 		getAllRaw(product: CommodityConstant, count: number, endLevel: number): { [type in CommoditiesRaw]: number };
 		produce(product: CommodityConstant, amount: number, roomName: string);
+		calIndustryProfit(log: boolean);
 	}
 }
 
@@ -13,6 +14,10 @@ interface Creep {
 	boostCounts: { [boostType: string]: number };
 	bodyCounts: { [bodyType: string]: number };
 	boostedBodyCounts: { [bodyType: string]: number };
+	inRampart: boolean;
+}
+
+interface PowerCreep {
 	inRampart: boolean;
 }
 

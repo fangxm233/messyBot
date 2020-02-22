@@ -3,7 +3,7 @@ import { Visualizer } from "../programs/Visualizer";
 import { Traveler } from "../programs/Traveler";
 import { RoomPlanner } from "./RoomPlanner";
 import { Process } from "../process/process";
-import { Porcesses } from "../process/processes";
+import { Processes } from "../process/processes";
 
 export const MAP_NONE = 0;
 export const MAP_OUTSIDE = 200;
@@ -11,7 +11,7 @@ export const MAP_INSIDE = 2;
 export const MAP_WALL = 255;
 export const MAP_ON = 1;
 
-@profile
+// @profile
 export class BarrierPlanner{
     roomName: string;
     basePosition: Coord;
@@ -153,7 +153,7 @@ export class BarrierPlanner{
         let nukes = room.find(FIND_NUKES);
         if(nukes.length) {
             console.log('hi')
-            if(!Process.getProcess(this.roomName, 'defendNuke')) Porcesses.processDefendNuke(this.roomName);
+            if(!Process.getProcess(this.roomName, 'defendNuke')) Processes.processDefendNuke(this.roomName);
             let extensionCount = room.extensions.length;
             let rp = new RoomPlanner(this.roomName);
     
