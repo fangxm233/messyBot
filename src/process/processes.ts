@@ -13,111 +13,118 @@ import { ProcessActiveDefend } from "./instances/activeDefend";
 import { ProcessDefendNuke } from "./instances/defendNuke";
 import { ProcessAttack } from "./instances/attack";
 import { ProcessAttackController } from "./instances/attackController";
+import { ProcessHelping } from "./instances/helping";
 
 @profile
-export class Processes{
-    static processFilling(roomName: string): ProcessFilling{
+export class Processes {
+    static processFilling(roomName: string): ProcessFilling {
         let process = new ProcessFilling(roomName);
         Process.startProcess(process);
         return process;
     }
 
-    static processMining(roomName: string): ProcessMining{
+    static processMining(roomName: string): ProcessMining {
         let process = new ProcessMining(roomName);
         Process.startProcess(process);
         return process;
     }
 
-    static processMinePower(roomName: string, targetName: string): ProcessMinePower{
+    static processMinePower(roomName: string, targetName: string): ProcessMinePower {
         let process = new ProcessMinePower(roomName, targetName);
         Process.startProcess(process);
         return process;
     }
 
-    static processMineDeposit(roomName: string, targetName: string, type: DepositConstant): ProcessMineDeposit{
+    static processMineDeposit(roomName: string, targetName: string, type: DepositConstant): ProcessMineDeposit {
         let process = new ProcessMineDeposit(roomName, targetName, type);
         Process.startProcess(process);
         return process;
     }
 
-    static processDefend(roomName: string, targetName: string, type: 'creep' | 'coreDis'): ProcessDefend{
+    static processDefend(roomName: string, targetName: string, type: 'creep' | 'coreDis'): ProcessDefend {
         let process = new ProcessDefend(roomName, targetName, type);
         Process.startProcess(process);
         return process;
     }
 
-    static processRepair(roomName: string, type: 'normal' | 'defend'): ProcessRepair{
+    static processRepair(roomName: string, type: 'normal' | 'defend'): ProcessRepair {
         let process = new ProcessRepair(roomName, type);
         Process.startProcess(process);
         return process;
     }
 
-    static processBoost(roomName: string, compoundTypes: MineralBoostConstant[], creepName: string, processId: string): ProcessBoost{
+    static processBoost(roomName: string, compoundTypes: MineralBoostConstant[], creepName: string, processId: string): ProcessBoost {
         let process = new ProcessBoost(roomName, compoundTypes, creepName, processId);
         Process.startProcess(process);
         return process;
     }
 
-    static processActiveDefend(roomName: string): ProcessActiveDefend{
+    static processActiveDefend(roomName: string): ProcessActiveDefend {
         let process = new ProcessActiveDefend(roomName);
         Process.startProcess(process);
         return process;
     }
 
-    static processDefendNuke(roomName: string): ProcessDefendNuke{
+    static processDefendNuke(roomName: string): ProcessDefendNuke {
         let process = new ProcessDefendNuke(roomName);
         Process.startProcess(process);
         return process;
     }
 
-    static processAttack(roomName: string, targetRoom: string): ProcessAttack{
+    static processAttack(roomName: string, targetRoom: string): ProcessAttack {
         let process = new ProcessAttack(roomName, targetRoom);
         Process.startProcess(process);
         return process;
     }
 
-    static processAttackController(roomName: string, targetRoom: string, creepNum: number): ProcessAttackController{
+    static processAttackController(roomName: string, targetRoom: string, creepNum: number): ProcessAttackController {
         let process = new ProcessAttackController(roomName, targetRoom, creepNum);
         Process.startProcess(process);
         return process;
     }
 
-    public static minePower(){
+    static processHelping(roomName: string, targetRoom: string, sourceRoom: string, creepNum: number): ProcessHelping {
+        let process = new ProcessHelping(roomName, targetRoom, sourceRoom, creepNum);
+        Process.startProcess(process);
+        return process;
+    }
+
+    public static minePower() {
         for (const roomName in powerRegion) {
-            if(!Game.rooms[roomName]) continue;
+            if (!Game.rooms[roomName]) continue;
             let storage = Game.rooms[roomName].storage;
-            if(storage && storage.energy < 600000) continue;
+            if (storage && storage.energy < 600000) continue;
             let rooms = powerRegion[roomName];
             for (const powerRoomName of rooms) {
-                if(!intel[powerRoomName]) continue;
+                if (!intel[powerRoomName]) continue;
                 let i = intel[powerRoomName];
-                if(i.powerBank && i.powerBank.ticks > 4000 && i.powerBank.amount > 3000){
-                    if(Process.getProcess(roomName, 'minePower', 'targetName', powerRoomName)) continue;
+                if (i.powerBank && i.powerBank.ticks > 4000 && i.powerBank.amount > 3000) {
+                    if (Process.getProcess(roomName, 'minePower', 'targetName', powerRoomName)) continue;
                     Processes.processMinePower(roomName, powerRoomName);
                 }
             }
         }
     }
 
-    public static mineDeposit(){
+    public static mineDeposit() {
         for (const roomName in depositRegion) {
-            if(!Game.rooms[roomName]) continue;
+            if (!Game.rooms[roomName]) continue;
             let terminal = Game.rooms[roomName].terminal;
-            if(!terminal) continue;
+            if (!terminal) continue;
             let rooms = depositRegion[roomName];
             for (const depositRoomName of rooms) {
-                if(!intel[depositRoomName]) continue;
+                if (!intel[depositRoomName]) continue;
                 let i = intel[depositRoomName];
-                if(i.deposit && i.deposit.cooldown < 100){
-                    if(terminal.store.getUsedCapacity(i.deposit.type) >= 70000) break;
-                    if(Process.getProcess(roomName, 'mineDeposit', 'targetName', depositRoomName)) continue;
+                if (i.deposit && i.deposit.cooldown < 100) {
+                    if (terminal.store.getUsedCapacity(i.deposit.type) >= 70000) break;
+                    if (Process.getProcess(roomName, 'mineDeposit', 'targetName', depositRoomName)) continue;
                     Processes.processMineDeposit(roomName, depositRoomName, i.deposit.type);
                 }
             }
         }
     }
 
-    static rebuildProcess(processI: ProcessInterface, roomName: string, id: number){
+    static rebuildProcess(processI: ProcessInterface, roomName: string, id: number) {
         let process: Process | undefined = undefined;
 
         switch (processI.name) {
@@ -154,7 +161,7 @@ export class Processes{
             default:
                 break;
         }
-        if(process){
+        if (process) {
             process.id = id;
             Process.addProcess(process);
             process.memory = processI;
@@ -164,12 +171,12 @@ export class Processes{
         }
     }
 
-    static rebuildProcesses(){
+    static rebuildProcesses() {
         console.log('rebuilding processes...');
         Process.processes = {};
         Process.process_Type = {};
         Process.processes_ID = {};
-        if(!Memory.processes){
+        if (!Memory.processes) {
             Memory.processes = {};
             return;
         }
@@ -178,20 +185,20 @@ export class Processes{
             Process.processes[roomName] = {};
             for (const id in processes) {
                 const processInterface = processes[id];
-                if(!processInterface) continue;
-                if(!Process.process_Type[processInterface.name]) Process.process_Type[processInterface.name] = {};
+                if (!processInterface) continue;
+                if (!Process.process_Type[processInterface.name]) Process.process_Type[processInterface.name] = {};
                 processInterface.creeps = _.uniq(processInterface.creeps);
                 this.rebuildProcess(processInterface, roomName, id as any);
             }
         }
     }
 
-    static showHud(){
+    static showHud() {
         for (const roomName in Process.processes) {
             const processes = Process.processes[roomName];
             let visual: string[][] = [];
             _.forEach(processes, process => {
-                if(!process) return;
+                if (!process) return;
                 visual.push([process.processName, process.state == 'active' ? 'active' : (process.state == 'suspended' ? 'suspended' : process.sleepTime.toString())])
             })
             Visualizer.infoBox('Processes', visual, { x: 1, y: 8, roomName }, 7.75);

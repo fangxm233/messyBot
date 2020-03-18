@@ -1,21 +1,21 @@
-export class CreepWish{
-    static wishes:{
-        [roomName: string]: {role: string, processId?: string, memory?: any, ratio?: string[]};
+export class CreepWish {
+    static wishes: {
+        [roomName: string]: { role: string, processId?: string, memory?: any, ratio?: string[] };
     } = {};
 
-    static wishCreep(roomName: string, role: string, processId?: string, memory?: any, ratio?: string[]){
-        if(!this.wishes[roomName]) {
+    static wishCreep(roomName: string, role: string, processId?: string, memory?: any, ratio?: string[]) {
+        if (!this.wishes[roomName]) {
             this.wishes[roomName] = { role: role, processId: processId, memory: memory, ratio: ratio };
             return;
         }
-        if(rolePriority[this.wishes[roomName].role] > rolePriority[role]) this.wishes[roomName] = { role: role, processId: processId, memory: memory, ratio: ratio };
+        if (rolePriority[this.wishes[roomName].role] > rolePriority[role]) this.wishes[roomName] = { role: role, processId: processId, memory: memory, ratio: ratio };
     }
 
-    static getWish(roomName: string){
+    static getWish(roomName: string) {
         return this.wishes[roomName];
     }
 
-    static clear(roomName: string){
+    static clear(roomName: string) {
         delete this.wishes[roomName];
     }
 }
@@ -46,7 +46,8 @@ export const rolePriority: {
     dTransporter: 20,
     defencer: 21,
     coreDis: 22,
-    hauler: 23,
-    pioneer: 24,
-    cAttack: 25,
+    好人: 23,
+    hauler: 24,
+    pioneer: 25,
+    cAttack: 26,
 }

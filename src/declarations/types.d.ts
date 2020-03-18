@@ -52,7 +52,7 @@ interface Memory {
 	colonies: { [name: string]: colonyConfig[] };
 	market: { [name: string]: marketConfig };
 	attack: { toughId: Id };
-	statistics: { 
+	statistics: {
 		[name: string]: statisticsData;
 	};
 	settings: {
@@ -65,7 +65,7 @@ interface Memory {
 		[roomName: string]: RoomStableMemory;
 	}
 	processes: {
-        [roomName: string]: ProcessInterface[];
+		[roomName: string]: ProcessInterface[];
 	}
 	industry: {
 		[roomName: string]: {
@@ -85,7 +85,7 @@ interface Memory {
 
 	gotoHaul: boolean;
 	haulerRoom: string;
-	
+
 	UnderAttacking: boolean;
 
 	gotoDismantle: boolean;
@@ -125,9 +125,9 @@ interface RoomMemory {
 // 	creeps: string[];
 // }
 
-interface ProcessInterface{
-    name: string;
-    state: 'sleeping' | 'active' | 'suspended';
+interface ProcessInterface {
+	name: string;
+	state: 'sleeping' | 'active' | 'suspended';
 	slt: number;
 	creeps: string[];
 }
@@ -149,28 +149,33 @@ type ProcessBoostInterface = ProcessInterface & {
 	processId: string
 }
 type ProcessRepairInterface = ProcessInterface & {
-	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
+	boostFlag: { [creepName: string]: 'boosting' | 'boosted' | 'none' };
 	type: 'normal' | 'defend';
 	closing: boolean;
 	suspending: boolean;
 }
 type ProcessActiveDefendInterface = ProcessInterface & {
-	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
+	boostFlag: { [creepName: string]: 'boosting' | 'boosted' | 'none' };
 }
 type ProcessAttackInterface = ProcessInterface & {
 	targetRoom: string;
-	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
+	boostFlag: { [creepName: string]: 'boosting' | 'boosted' | 'none' };
 }
 type ProcessAttackRangeInterface = ProcessInterface & {
 	targetRoom: string;
-	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
+	boostFlag: { [creepName: string]: 'boosting' | 'boosted' | 'none' };
 }
 type ProcessAttackDestroyInterface = ProcessInterface & {
 	targetRoom: string;
-	boostFlag: {[creepName: string]: 'boosting' | 'boosted' | 'none'};
+	boostFlag: { [creepName: string]: 'boosting' | 'boosted' | 'none' };
 }
 type ProcessAttackControllerInterface = ProcessInterface & {
 	targetRoom: string;
+	creepNum: number;
+}
+type ProcessHelpingInterface = ProcessInterface & {
+	targetRoom: string;
+	sourceRoom: string;
 	creepNum: number;
 }
 
@@ -202,12 +207,12 @@ interface RoomStableMemory {
 }
 interface SpawnMemory { }
 
-interface savedPath{
+interface savedPath {
 	paths: pathSeg[];
 	dis: number;
 }
 
-interface pathSeg{
+interface pathSeg {
 	pos: RoomPosition;
 	path: string;
 }
@@ -216,7 +221,7 @@ interface pathSeg{
 declare namespace NodeJS {
 	interface Global {
 		log: any;
-		rooms:{
+		rooms: {
 			[roomName: string]: {
 				workerNum: number | undefined;
 			}
@@ -231,7 +236,7 @@ declare namespace NodeJS {
 		Memory: any;
 	}
 }
-interface statisticsData{
+interface statisticsData {
 	fillerIdleRecord: boolean[];
 	resourceUsageRecord: number[];
 	idleTickPercent: number;
@@ -254,7 +259,7 @@ interface marketConfig {
 	buyPrice: number;
 	transport: { des: string, amount: number, type: ResourceConstant };
 
-	orderFinished:{
+	orderFinished: {
 		buy: {
 			order: Order,
 			amount: number,

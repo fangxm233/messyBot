@@ -117,6 +117,14 @@ export class CreepManager {
                 { memory: this.getMemory('pioneer', id, room.name) });
         }
 
+        // wish 好人
+        if (wishCreepRole == '好人') {
+            this.spawnInfo = undefined;
+            let id = CreepManager.getId('好人');
+            this.setInfo(this.getBodies(['w1', 'c1', 'm2'], capEnergy), '好人_' + id,
+                { memory: this.getMemory('好人', id, room.name) });
+        }
+
         // wish powerAttack
         if (wishCreepRole == 'powerAttack') {
             this.spawnInfo = undefined;
