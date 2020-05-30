@@ -218,7 +218,7 @@ Object.defineProperty(StructureRampart.prototype, 'targetHits', {
 			let hasRange = this.pos.findInRange(FIND_HOSTILE_CREEPS, 3, { filter: creep => !!creep.bodyCounts[RANGED_ATTACK]} );
 			let hasMelee = this.pos.findInRange(FIND_HOSTILE_CREEPS, 3, { filter: creep => !!creep.bodyCounts[ATTACK] || !!creep.bodyCounts[WORK]} );
 			if(hasRange.length || hasMelee.length) return this._targetHits = 2e7;
-			else return this._targetHits = 3e6;
+			else return this._targetHits = 6e6;
 		}
 		return this._targetHits;
 	},

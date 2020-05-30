@@ -125,12 +125,12 @@ export class Process{
                 i--;
                 continue;
             }
-            if(Game.creeps[creepName].memory.spawnRoom != this.roomName) {
-                console.log('c', Game.creeps[creepName].memory.spawnRoom, 'p', this.roomName, 'cn', creepName);
-                this.removeCreep(creepName);
-                i--;
-                continue;
-            }
+            // if(Game.creeps[creepName].memory.spawnRoom != this.roomName) {
+            //     console.log('c', Game.creeps[creepName].memory.spawnRoom, 'p', this.roomName, 'cn', creepName);
+            //     this.removeCreep(creepName);
+            //     i--;
+            //     continue;
+            // }
             callbackfn(Game.creeps[creepName]);
         }
     }
@@ -204,6 +204,8 @@ export class Process{
     }
 
     static runAllProcesses(){
+        let cpuUesd: {[type: string]: {num: number, cpu: number}} = {};
+
         for (const processName in this.process_Type) {
             const processes = this.process_Type[processName];
             _.forEach(processes, process => {
@@ -219,7 +221,11 @@ export class Process{
                         }
                         break;
                     case 'active':
+                        // if(!cpuUesd[process.processName]) cpuUesd[process.processName] = {num: 0, cpu: 0};
+                        // let cpu = Game.cpu.getUsed();
                         process.run();
+                        // cpuUesd[process.processName].cpu += Game.cpu.getUsed() - cpu;
+                        // cpuUesd[process.processName].num++;
                         break;
                     case 'suspended':
                         if(process.check()) {
@@ -229,6 +235,11 @@ export class Process{
                         break;
                 }
             })
-        }
+        };
+        // let strings: string[] = [];
+        // _.forEach(cpuUesd, (used, key) => {
+        //     strings.push([`name: ${key}`, `total: ${used.cpu.toFixed(3)}`, `avg: ${(used.cpu / used.num).toFixed(3)}`, `num: ${used.num}`].join('\t'));
+        // });
+        // console.log(strings.join('\n'));
     }
 }

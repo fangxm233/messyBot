@@ -20,9 +20,13 @@ export class ProcessDefend extends Process{
     static getInstance(struct: ProcessDefendInterface, roomName: string): ProcessDefend{
         return new ProcessDefend(roomName, struct.tgt, struct.type);
     }
-
+    
     run(){
         this.foreachCreep(()=>{});
+        if(!_.some(Memory.colonies[this.roomName], c => c.name == this.targetName)) {
+            this.close();
+            return;
+        }
 
         let invaders: Creep[] = [];
         let wounded: Creep[] = [];

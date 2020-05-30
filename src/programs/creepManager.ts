@@ -8,6 +8,7 @@ import { RoomPlanner, fillerCount } from "../roomPlanner/RoomPlanner";
 import { Process } from "../process/process";
 import { CreepWish } from "./creepWish";
 import { RoleFactory } from "../roles/roleFactory";
+import { ProcessFilling } from "../process/instances/filling";
 
 @profile
 export class CreepManager {
@@ -22,6 +23,7 @@ export class CreepManager {
 
     static clearUnexistingCreep() {
         for (const name in Memory.creeps) {
+            if (name == 'sad') continue;
             if (!Game.creeps[name]) {
                 this.clearCreep(name);
             }
@@ -71,19 +73,19 @@ export class CreepManager {
             if (!creeps[role]) creeps[role] = 0;
         }
 
-        let produceH = !room.memory.underAttacking && !Process.getProcess(room.name, 'activeDefend') && !Process.getProcess(room.name, 'attack');
+        let produceH = !Process.getProcess(room.name, 'activeDefend') && !Process.getProcess(room.name, 'attack');
 
         let avaEnergy = room.energyAvailable;
         let capEnergy = room.energyCapacityAvailable;
         if (creeps['filler'] < Alloter.getUnitCount(ALLOT_FILLER, room.name)) capEnergy = Math.max(avaEnergy, 300);
-        // if (creeps['harvester'] == 0 && room.memory.noEnergyAvailable) capEnergy = Math.max(avaEnergy, 300);
+        if (creeps['harvester'] == 0 && room.memory.noEnergyAvailable) capEnergy = Math.max(avaEnergy, 300);
 
         let wishCreep = CreepWish.getWish(room.name);
         let wishCreepRole = '';
         if (wishCreep) wishCreepRole = wishCreep.role;
 
         //hauler
-        if (wishCreepRole == 'hauler' || Memory.gotoHaul && Memory.haulerRoom == room.name && creeps['hauler'] < 3) {//4
+        if (wishCreepRole == 'hauler' || Memory.gotoHaul && Memory.haulerRoom == room.name && creeps['hauler'] < 2) {//Memory.gotoHaul && Memory.haulerRoom == room.name
             this.spawnInfo = undefined;
             let id = CreepManager.getId('hauler');
             this.setInfo(this.getBodies(['c1', 'm1'], capEnergy), 'hauler_' + id,
@@ -91,7 +93,7 @@ export class CreepManager {
         }
 
         //dismantler
-        if (wishCreepRole == 'dismantler' || Memory.gotoDismantle && Memory.dismantlerRoom == room.name && creeps['dismantler'] < 2) {//2
+        if (wishCreepRole == 'dismantler' || Memory.gotoDismantle && Memory.dismantlerRoom == room.name && creeps['dismantler'] < 2) {
             this.spawnInfo = undefined;
             let id = CreepManager.getId('dismantler');
             this.setInfo(this.getBodies(['c49', 'm1'], capEnergy), 'pcontainer_' + id,
@@ -107,22 +109,15 @@ export class CreepManager {
         }
 
         //pioneer
-        if (wishCreepRole == 'pioneer' || Memory.expandRoom == room.name && creeps['pioneer'] < 2) {
+        if (wishCreepRole == 'pioneer' || Memory.expandRoom == room.name && creeps['pioneer'] < 5) {//Memory.expandRoom == room.name &&
             this.spawnInfo = undefined;
             let id = CreepManager.getId('pioneer');
             let hasClaim = creeps['pioneer'] == 0 && !Memory.claimed;
-            let bodies = this.getBodies(['w1', 'c1', 'm1'], capEnergy);
+            // hasClaim = false;
+            let bodies = this.getBodies(['w1', 'c1', 'm2'], capEnergy);
             if (hasClaim) bodies = [CLAIM, MOVE];
             this.setInfo(bodies, 'pioneer_' + id,
                 { memory: this.getMemory('pioneer', id, room.name) });
-        }
-
-        // wish 好人
-        if (wishCreepRole == '好人') {
-            this.spawnInfo = undefined;
-            let id = CreepManager.getId('好人');
-            this.setInfo(this.getBodies(['w1', 'c1', 'm2'], capEnergy), '好人_' + id,
-                { memory: this.getMemory('好人', id, room.name) });
         }
 
         // wish powerAttack
@@ -234,19 +229,21 @@ export class CreepManager {
         let storage = room.storage;
         if (!storage) numUpgraders = 0;
         else if (controller.level != 8) {
+            if (storage.store.energy >= 300000) numUpgraders += 1;
+            if (storage.store.energy >= 350000) numUpgraders += 1;
             if (storage.store.energy >= 400000) numUpgraders += 1;
             if (storage.store.energy >= 450000) numUpgraders += 1;
-            if (storage.store.energy >= 500000) numUpgraders += 1;
-            if (storage.store.energy >= 550000) numUpgraders += 1;
-            if (storage.store.energy >= 600000) numUpgraders += 2;
-            if (storage.store.energy >= 650000) numUpgraders += 3;
+            if (storage.store.energy >= 500000) numUpgraders += 2;
+            if (storage.store.energy >= 550000) numUpgraders += 3;
         }
-        if (storage && storage.store.energy < 350000) numUpgraders = 0;
-        if (controller.level == 8 && controller.ticksToDowngrade > 110000) numUpgraders = 0;
+        if (storage && storage.store.energy < 50000) numUpgraders = 0;
+        // if(controller.level == 8 && storage) if(storage.store.energy > 600000) numUpgraders = 1; else numUpgraders = 0;
+        // if(controller.level == 8 && controller.ticksToDowngrade > 110000) numUpgraders = 0;
+        if (controller.level == 8 && controller.ticksToDowngrade < 110000) numUpgraders = 1;
         if (wishCreepRole == 'upgrader' || creeps['upgrader'] < numUpgraders) {
             this.spawnInfo = undefined;
             let budget = capEnergy;
-            // if(controller.level == 8) budget = 3000;
+            if (controller.level == 8) budget = Math.min(3000, budget);
             let bodies = this.getBodies([controller.level >= 6 && controller.level != 8 ? 'w2' : 'w1', 'c1', 'm1'], budget);
             // if(controller.level == 8) bodies = [WORK, CARRY, MOVE];
             let id = this.getId('upgrader');
@@ -277,11 +274,10 @@ export class CreepManager {
             if (controller.level < 4) numWorkers = Math.max(numWorkers, MAX_WORKERS);
             global.rooms[room.name].workerNum = numWorkers;
         }
-        if (room.name == 'W12N9') numWorkers = 5;//!!!!
-        else numWorkers = 0;
+
         if (wishCreepRole == 'worker' || creeps['worker'] < numWorkers) {
             this.spawnInfo = undefined;
-            if (!bodies) bodies = this.getBodies(['w1', 'c1', 'm2'], capEnergy);//!!!!↑
+            if (!bodies) bodies = this.getBodies(controller.level < 3 ? ['w1', 'c1', 'm2'] : ['w1', 'c1', 'm1'], capEnergy);
             let id = this.getId('worker');
             this.setInfo(bodies, 'worker_' + id, { memory: this.getMemory('worker', id, room.name) });
         }
@@ -322,21 +318,12 @@ export class CreepManager {
                 { memory: this.getMemory('transporter', id, room.name) });
         }
 
-        // wish healer
-        if (wishCreepRole == 'healer') {
-            this.spawnInfo = undefined;
-            let bodies = this.getBodies(['t1', 'h3', 'm1'], capEnergy);
-            let id = CreepManager.getId('healer');
-            this.setInfo(bodies, 'healer_' + id,
-                { memory: this.getMemory('healer', id, room.name) });
-        }
-
         // wish warrior
         if (wishCreepRole == 'warrior') {
             this.spawnInfo = undefined;
             let bodies = this.getBodies(['t1', 'r3', 'm1'], capEnergy);
             let id = CreepManager.getId('warrior');
-            this.setInfo(bodies, 'warrior_' + id,
+            this.setInfo(bodies, '_warrior_' + id + Game.time.toString(36),
                 { memory: this.getMemory('warrior', id, room.name) });
         }
 
@@ -345,8 +332,44 @@ export class CreepManager {
             this.spawnInfo = undefined;
             let bodies = this.getBodies(['t1', 'w3', 'm1'], capEnergy);
             let id = CreepManager.getId('destroyer');
-            this.setInfo(bodies, 'destroyer_' + id,
+            this.setInfo(bodies, '_destroyer_' + id + Game.time.toString(36),
                 { memory: this.getMemory('destroyer', id, room.name) });
+        }
+
+        // wish healer
+        if (wishCreepRole == 'healer') {
+            this.spawnInfo = undefined;
+            let bodies = this.getBodies(['t13', 'h27', 'm10'], capEnergy);
+            let id = CreepManager.getId('healer');
+            this.setInfo(bodies, '_healer_' + id + Game.time.toString(36),
+                { memory: this.getMemory('healer', id, room.name) });
+        }
+
+        // wish shWarrior
+        if (wishCreepRole == 'shWarrior' && wishCreep.ratio) {
+            this.spawnInfo = undefined;
+            let bodies = this.getBodies(wishCreep.ratio, capEnergy);
+            let id = CreepManager.getId('shWarrior');
+            this.setInfo(bodies, 'shWarrior_' + id,
+                { memory: this.getMemory('shWarrior', id, room.name) });
+        }
+
+        // wish shWarrior2
+        if (wishCreepRole == 'shWarrior2' && wishCreep.ratio) {
+            this.spawnInfo = undefined;
+            let bodies = this.getBodies(wishCreep.ratio, capEnergy);
+            let id = CreepManager.getId('shWarrior2');
+            this.setInfo(bodies, 'shWarrior2_' + id,
+                { memory: this.getMemory('shWarrior2', id, room.name) });
+        }
+
+        // wish shHealer
+        if (wishCreepRole == 'shHealer' && wishCreep.ratio) {
+            this.spawnInfo = undefined;
+            let bodies = this.getBodies(wishCreep.ratio, capEnergy);
+            let id = CreepManager.getId('shHealer');
+            this.setInfo(bodies, 'shHealer_' + id,
+                { memory: this.getMemory('shHealer', id, room.name) });
         }
 
         // transporter
@@ -359,13 +382,13 @@ export class CreepManager {
                 // if(!transport.data.distance && transport.data.pos)
                 //     transport.data.distance = PathFinder.search(room.spawns[0].pos, transport.data.pos, {swampCost: 1}).cost + 5;
                 // if(!transport.data.distance) return;
-                let capacity = Memory.stableData[transport.roomName].harvesterPath[transport.id].dis * 20 * 1.1;
+                let capacity = (Memory.stableData[transport.roomName].harvesterPath[transport.id].dis + 2) * 20 * 1.1;
                 let multiple = Math.ceil(capacity / 100);
-                cost = multiple * 150 + (transport.roomName == room.name ? 0 : 100);
-                cost = Math.min(cost, capEnergy) - (transport.roomName == room.name ? 0 : 100);
+                cost = multiple * 150// + (transport.roomName == room.name ? 0 : 100);
+                cost = Math.min(cost, capEnergy) - (transport.roomName == room.name ? 0 : 0);
             }
             let bodies = this.getBodies(controller.level < 4 ? ['c1', 'm1'] : ['c2', 'm1'], cost);
-            if (transport.roomName != room.name) bodies[0] = WORK;
+            // if(transport.roomName != room.name) bodies[0] = WORK;
             let id = CreepManager.getId('transporter');
             this.setInfo(bodies, 'transporter_' + id,
                 { memory: this.getMemory('transporter', id, room.name, { allotUnit: transport }) });
@@ -402,12 +425,12 @@ export class CreepManager {
                 WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK,
                 CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE,
                 CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
-            else if (capEnergy >= 800) bodies = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+            else if (capEnergy >= 1050) bodies = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
             else if (capEnergy >= 650) bodies = [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE];
             else if (capEnergy >= 550) bodies = [WORK, WORK, WORK, WORK, WORK, MOVE];
             else if (capEnergy >= 300) bodies = [WORK, WORK, MOVE];
             if (controller.level == 8 && source.data.pos.roomName != room.name) bodies = [WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK, WORK,
-                MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, CARRY]
+                MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, CARRY, CARRY, CARRY, CARRY]
             this.setInfo(bodies, newName,
                 { memory: this.getMemory('harvester', id, room.name, { allotUnit: source }) });
             Alloter.free(source);
@@ -508,10 +531,25 @@ export class CreepManager {
         opts.energyStructures = this.consumeOrder[room.name] as any;
 
         if (!opts.memory) return;
-        let spawns = room.spawns;
+        let spawns = room.spawns.filter(spawn => !spawn.spawning);
+        if (!spawns.length) {
+            let energyNeeded = _.sum(parts, part => BODYPART_COST[part]);
+            if (energyNeeded < room.energyAvailable) return;
+            let process = Process.getProcess(room.name, 'filling') as ProcessFilling;
+            if (process) process.refillNeeded(true);
+            return;
+        }
         for (const spawn of spawns) {
             // console.log(spawn.spawnCreep(parts, name, {dryRun: true}) + name + spawn.name);
-            if (spawn.spawnCreep(parts, name, { dryRun: true }) == OK) {
+            let code = spawn.spawnCreep(parts, name, { dryRun: true });
+            if (code == ERR_NOT_ENOUGH_ENERGY) {
+                let proccess = Process.getProcess(room.name, 'filling') as ProcessFilling;
+                if (proccess) {
+                    proccess.refillNeeded(false);
+                }
+                return;
+            }
+            if (code == OK) {
                 // console.log(spawn.name + name);
                 if (opts.memory.role)
                     console.log('Spawning new ' + opts.memory.role + ': ' + name);

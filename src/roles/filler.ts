@@ -53,7 +53,7 @@ export class RoleFiller extends Role {
                 this.creep.room.memory.noEnergyAvailable = !SourceManager.getSource(this.creep, true); //todo op
             else if(!this.creep.pos.isNearTo(structure)) this.creep.travelTo(rp.toRoomPos(rp.getPosByRegion(id, this.getStandPos(index))));
             
-            if(order[index + 1] && order[index + 1].pos && this.hasUnfull(order, index + 1, order.length) != -1 && this.creep.carry.energy != 0){
+            if(order[index + 1] && order[index + 1].pos && this.hasUnfull(order, index + 1, order.length) != -1 && this.creep.store.energy >= structure.store.getFreeCapacity(RESOURCE_ENERGY)){
                 let pos = order[index + 1].pos;
                 if(pos) this.creep.travelTo(rp.toRoomPos(pos));
             }

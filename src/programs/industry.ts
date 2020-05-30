@@ -83,8 +83,8 @@ export const commoditiesStock: {
 } = {
     [1]: 100,
     [2]: 20,
-    [3]: 10,
-    [4]: 5,
+    [3]: 8,
+    [4]: 4,
     [5]: 100,
 }
 
@@ -107,6 +107,7 @@ export class Industry {
 
         for (const room of rooms) {
             if (!room.factory) continue;
+            if (Game.time % 10 == 0) this.correctComponents(room.name);
             const factory = room.factory;
             if (Memory.industry[room.name]) {
                 const state = Memory.industry[room.name];
@@ -133,6 +134,7 @@ export class Industry {
                     }
                 }
             } else {
+                if (Game.time % 2 == 0) continue;
                 if (room.name in roomLevel) {
                     const level = roomLevel[room.name];
                     if (_.some(level2Commodities[level], product => {
@@ -141,6 +143,10 @@ export class Industry {
                     })) continue;
                 }
                 if (_.some(level2Commodities[0], product => this.produce(product, 200, room.name))) continue;
+
+                // if(!Memory.industry[room.name]) {
+                //     if(factory.store.battery >= 50 && !factory.cooldown) factory.produce(RESOURCE_ENERGY as any);
+                // }
             }
         }
     }
@@ -162,10 +168,15 @@ export class Industry {
             if (COMMODITIES[product].components.hasOwnProperty(component)) {
                 const num = COMMODITIES[product].components[component] / COMMODITIES[product].amount * amount - this.getStock(component as any, roomName);
                 if (num <= 0) continue;
+                // if(roomName == 'E49N19') console.log('hello', roomName, component, product)
                 if (commoditiesRawList.includes(component as any)) continue;
                 if (Industry.isMatchLevel(component as any, roomName)) {
+                    // let stock = Industry.getStock(component as any, roomName);
+                    // if(stock < num){
                     let result = Industry.produce(component as any, Industry.toWholeNumber(component as any, num), roomName);
                     if (result == true) return true;
+                    // Industry.setState(component as any, Industry.toWholeNumber(component as any, num), roomName, true);
+                    // }
                 }
             }
         }
@@ -191,16 +202,43 @@ export class Industry {
             let num = COMMODITIES[product].components[component] / COMMODITIES[product].amount * amount - this.getStock(component as any, roomName);
             if (num <= 0) continue;
             if (commoditiesRawList.includes(component as any) || barList.includes(component as any)) continue;
+            if ('level' in COMMODITIES[component]) {
+                const level = (COMMODITIES[component] as any).level;
+                const sourceRoom = level2Room[level];
+                const stock = this.getStock(component as any, sourceRoom);
+                if (stock >= num) {
+                    this.setTransport(component as any, num, sourceRoom, roomName);
+                }
+                continue;
+            }
             for (const sourceRoom in this.roomStock) {
-                if (this.roomStock.hasOwnProperty(sourceRoom)) {
-                    const stock = this.roomStock[sourceRoom];
-                    if (component in stock && stock[component] >= (this.isEqualLevel(component as any, sourceRoom) ? num : 1) && !this.isNeeded(component as any, sourceRoom)) {
-                        this.setTransport(component as any, Math.min(num, stock[component]), sourceRoom, roomName);
-                        num -= stock[component];
-                        if (num <= 0) break;
+                if (sourceRoom == roomName) continue;
+                const stock = this.roomStock[sourceRoom];
+                if (component in stock && stock[component] > 0) {
+                    let amount = Math.min(num, stock[component]);
+                    if (this.isNeeded(component as any, sourceRoom)) {
+                        const neededAmount = this.neededAmount(component as any, sourceRoom);
+                        amount = Math.min(num, stock[component] - neededAmount);
+                        if (amount <= 0) continue;
                     }
+                    this.setTransport(component as any, amount, sourceRoom, roomName);
+                    num -= stock[component];
+                    if (num <= 0) break;
                 }
             }
+        }
+    }
+
+    static correctComponents(roomName: string) {
+        const level = roomLevel[roomName];
+        if (!level) return;
+        const products = level2Commodities[level];
+        for (const product of products) {
+            _.forEach(this.roomStock, (stock, sourceRoom) => {
+                if (stock[product] && roomLevel[sourceRoom!] != level && !this.isNeeded(product, sourceRoom!)) {
+                    this.setTransport(product, stock[product], sourceRoom!, roomName);
+                }
+            })
         }
     }
 
@@ -237,11 +275,28 @@ export class Industry {
         return roomName == level2Room[level];
     }
 
-    static isNeeded(type: CommodityConstant, roomName: string): boolean {
+    static cacheNeededAmount = {};
+    static neededAmount(type: CommodityConstant, roomName: string): number {
+        if (this.cacheNeededAmount[type + roomName]) return this.cacheNeededAmount[type + roomName];
         const level = roomLevel[roomName] || 0;
-        if (barList.includes(type as any)) return true;
-        if (level == 0 || commoditiesRawList.includes(type as any)) return false;
-        return _.some(level2Commodities[level], product => _.some(COMMODITIES[product].components, (num, component) => component == type));
+        if (barList.includes(type as any)) return Infinity;
+        if (level == 0 || commoditiesRawList.includes(type as any)) return 0;
+        const needed = _.max(_.flatten(_.map(level2Commodities[level], product => _.map(COMMODITIES[product].components, (amount, component) => {
+            if (component != type) return 0;
+            amount = this.getOnceAmount(product);
+            const num = COMMODITIES[product].components[component!] / COMMODITIES[product].amount * amount;
+            return num;
+        }))));
+        return this.cacheNeededAmount[type + roomName] = needed;
+    }
+
+    static cacheIsNeeded = {};
+    static isNeeded(type: CommodityConstant, roomName: string): boolean {
+        if (this.cacheIsNeeded[type + roomName]) return this.cacheIsNeeded[type + roomName];
+        const level = roomLevel[roomName] || 0;
+        if (barList.includes(type as any)) return this.cacheIsNeeded[type + roomName] = true;
+        if (level == 0 || commoditiesRawList.includes(type as any)) return this.cacheIsNeeded[type + roomName] = false;
+        return this.cacheIsNeeded[type + roomName] = _.some(level2Commodities[level], product => _.some(COMMODITIES[product].components, (num, component) => component == type));
     }
 
     static canProduce(product: CommodityConstant, amount: number, roomName: string): boolean {

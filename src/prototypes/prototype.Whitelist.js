@@ -31,7 +31,8 @@
 //-----a sample of whiteList------------
 let whiteList = new Set([
     'o4kapuk',
-    'Christinayo'
+    'Christinayo',
+    'ChenyangDu'
 ])
 
 function getWhitelist() {

@@ -55,8 +55,8 @@ export class ProcessRepair extends Process{
             this.groupNum = 2;
             this.suspendBucket = 2000;
             this.activeBucket = 5000;
-            this.suspendEnergy = 600000;
-            this.activeEnergy = 650000;
+            this.suspendEnergy = 500000; //!!!!
+            this.activeEnergy = 550000;
             this.targetHit = 1e6;
         } else {
             this.timeOut = 50;
@@ -119,7 +119,7 @@ export class ProcessRepair extends Process{
         });
 
         repairers.forEach((role) => {
-            if(this.type == 'defend' && !role.creep.spawning && this.boostFlag[role.creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost') 
+            if(!role.creep.spawning && this.boostFlag[role.creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost') 
                 && ProcessBoost.enoughToBoost(this.roomName, ['XLH2O'], role.creep)) {
                 Processes.processBoost(this.roomName, ['XLH2O'], role.creep.name, this.fullId);
                 this.boostFlag[role.creep.name] = 'boosting';

@@ -1,3 +1,4 @@
+import './prototypes/ConstructionSite'
 import './prototypes/RoomPosition';
 import './prototypes/RoomVisual';
 import './prototypes/RoomPropertiesForAllStructureTypes';
@@ -7,7 +8,7 @@ import './prototypes/Creep';
 import './prototypes/prototype.Whitelist';
 import stats from './profiler/stats';
 import actionsCounter from './profiler/actionCounter';
-import labCtrl from './extensions/labCtrl';
+// import labCtrl from './extensions/labCtrl';
 import { towerEstimate } from './lib/towerEstimate';
 
 import { CreepManager } from "./programs/creepManager";
@@ -19,7 +20,7 @@ import { ErrorMapper, reset } from "./utils/ErrorMapper";
 import "./programs/Traveler";
 import { Alloter } from "./logistics/alloter";
 import { Command } from './programs/command';
-import { lowEnergyLine, USE_ACTION_COUNTER } from './config';
+import { lowEnergyLine, USE_ACTION_COUNTER, USER_NAME } from './config';
 import { profile } from './profiler/decorator';
 import { Market } from './extensions/market';
 import { Statistics } from './programs/statistics';
@@ -36,31 +37,33 @@ import { BarrierPlanner } from './roomPlanner/barrierPlanner';
 import { ProcessActiveDefend } from './process/instances/activeDefend';
 import { Traveler } from './programs/Traveler';
 import { ProcessAttack } from './process/instances/attack';
+import { repeater } from './logistics/Repeater';
+import { RolePioneer } from './roles/pioneer';
+import { RoleHauler } from './roles/hauler';
 
 export const loop = ErrorMapper.wrapLoop(() => {
-    if (Game.shard.name != 'shard3' && Game.shard.name != 'shard0') {
-        _.forEach(Game.creeps, creep => creep.suicide());
-        return;
-    }
+    // if(Game.cpu.limit == 0) {
+    //     _.forEach(Game.creeps, creep => creep.suicide());
+    //     return;
+    // }
     stats.reset();
     let same = tryInitSameMemory();
     if (USE_ACTION_COUNTER) actionsCounter.init(true);
+
     if (reset) globalReset();
     let t1 = Game.cpu.getUsed();
     CreepManager.clearUnexistingCreep();//if(1)return
     let t2 = Game.cpu.getUsed();
     rebuildMemory(same && !reset);
     let t3 = Game.cpu.getUsed();
-
-    try {// 并不信任外来js
-        // 看你自己要啥，房号填好了
-        // labCtrl.run('E17N31', RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE, 5e4);
-    } catch (error) {
-        if (!error.stack)
-            throw error;
-        console.log(`<span style='color:red'>${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
-    }
-
+    // try {// 并不信任外来js
+    //     // 看你自己要啥，房号填好了
+    //     // labCtrl.run('E17N31', RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE, 5e4);
+    // } catch (error) {
+    //     if(!error.stack)
+    //         throw error;
+    //     console.log(`<span style='color:red'>${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
+    // }
     Command.run();
     Alloter.setDirty();
     Statistics.recordCreditChange();
@@ -129,83 +132,80 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
     let te = Game.cpu.getUsed();
     // console.log(`total: ${(te - t1).toFixed(3)} rebuild: ${(t3 - t2).toFixed(3)} refresh: ${d1.toFixed(3)} creepManager: ${d2.toFixed(3)} tower: ${d3.toFixed(3)} market: ${(t10 - t9).toFixed(3)} process: ${(t11 - t10).toFixed(3)} intel: ${(t5 - t4).toFixed(3)} industry: ${(t12 - t11).toFixed(3)} command: ${(t4 - t3).toFixed(3)}`);
-    let s: { [roleName: string]: any } = {};
-    s['harvester'] = { cpu: 0, num: 0 };
-    s['transporter'] = { cpu: 0, num: 0 };
-    s['upgrader'] = { cpu: 0, num: 0 };
-    s['manager'] = { cpu: 0, num: 0 };
-    s['reservist'] = { cpu: 0, num: 0 };
+    // let s: { [roleName: string]: any} = {};
+    // s['harvester'] = { cpu: 0, num: 0};
+    // s['transporter'] = { cpu: 0, num: 0};
+    // s['upgrader'] = { cpu: 0, num: 0};
+    // s['manager'] = { cpu: 0, num: 0};
+    // s['reservist'] = { cpu: 0, num: 0};
 
     for (const name in Game.creeps) {
         // let t = Game.cpu.getUsed();
         const creep = Game.creeps[name];
-        if (creep.memory.role == 'powerAttack' || creep.memory.role == 'powerHealer' || creep.memory.role == 'filler' || creep.memory.role == 'powerRange'
-            || creep.memory.role == 'dHarvester' || creep.memory.role == 'dTransporter' || creep.memory.role == 'container' || creep.memory.role == 'defencer'
-            || creep.memory.role == 'repairer' || creep.memory.role == 'rCarrier' || creep.memory.role == 'melee' || creep.memory.role == 'healer'
-            || creep.memory.role == 'warrior' || creep.memory.role == 'destroyer') continue;
-        if (creep.memory.role == 'transporter' && creep.memory.target) continue;
+        var role = creep.memory.role;
+        let run = false;
+        if (role == 'harvester' || role == 'upgrader' || role == 'hauler' || role == 'dismantler' || role == 'worker' || role == 'reservist' || role == 'manager'
+            || role == 'miner' || role == 'pioneer') run = true;
+        if (role == 'transporter' && !creep.memory.target) run = true;
+        if (!run) continue;
         try {
-            if (!s[creep.memory.role]) s[creep.memory.role] = { cpu: 0, num: 0 };
-            var role = RoleFactory.getRole(creep);
-            if (role) role.run();
+            var creepRole = RoleFactory.getRole(creep);
+            if (creepRole) creepRole.run();
         } catch (error) {
             if (!error.stack)
                 throw error;
             console.log(`<span style='color:red'>${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
         }
         // s[creep.memory.role].cpu += Game.cpu.getUsed() - t;
-        s[creep.memory.role].num += 1;
+        // s[creep.memory.role].num += 1;
     }
     for (const name in Game.powerCreeps) {
         const pc = Game.powerCreeps[name];
         if (pc.ticksToLive) {
-            new RolePC(pc).run();
+            RolePC.getRole(pc).run();
         }
-        else {
-            switch (pc.name) {
-                case 'PC_ONE':
-                    pc.spawn(Game.rooms.E49N22.powerSpawn as any);
-                    break;
-                case 'PC_TWO':
-                    pc.spawn(Game.rooms.E51N21.powerSpawn as any);
-                    break;
-                case 'PC_THREE':
-                    pc.spawn(Game.rooms.E47N22.powerSpawn as any);
-                    break;
-                case 'PC_FOUR':
-                    pc.spawn(Game.rooms.E44N19.powerSpawn as any);
-                    break;
-                case 'PC_FIVE':
-                    pc.spawn(Game.rooms.E49N19.powerSpawn as any);
-                    break
-                default:
-                    break;
-            }
-        }
+        // else{
+        //     switch (pc.name) {
+        //         case 'PC_ONE':
+        //             pc.spawn(Game.rooms.E49N22.powerSpawn as any);
+        //             break;
+        //         case 'PC_TWO':
+        //             pc.spawn(Game.rooms.E51N21.powerSpawn as any);
+        //             break;
+        //         case 'PC_THREE':
+        //             pc.spawn(Game.rooms.E47N22.powerSpawn as any);
+        //             break;
+        //         case 'PC_FOUR':
+        //             pc.spawn(Game.rooms.E44N19.powerSpawn as any);
+        //             break;
+        //         case 'PC_FIVE':
+        //             pc.spawn(Game.rooms.E49N19.powerSpawn as any);
+        //             break
+        //         default:
+        //             break;
+        //     }
+        // }
     }
-    for (const role in s) {
-        if (s.hasOwnProperty(role)) {
-            const element = s[role];
-            s[role].cpu = Number.parseFloat((element.cpu).toFixed(3));
-            s[role].avg = Number.parseFloat((element.cpu / element.num).toFixed(3));
-        }
-    }
+    // for (const role in s) {
+    //     if (s.hasOwnProperty(role)) {
+    //         const element = s[role];
+    //         s[role].cpu = Number.parseFloat((element.cpu).toFixed(3));
+    //         s[role].avg = Number.parseFloat((element.cpu / element.num).toFixed(3));
+    //     }
+    // }
 
     // console.log('total:', (Game.cpu.getUsed() - te).toFixed(3), JSON.stringify(s));
 
     // let t3 = Game.cpu.getUsed();
     // console.log('t2 to t3: ', t3 - t2);
     Alloter.checkDirty();
+    repeater.repeatActions();
     Processes.showHud();
 
-    // if(USE_ACTION_COUNTER) console.log(actionsCounter.output());
-    stats.commit();
+    if (Game.time % 3 == 1) stats.commit();
     if (USE_ACTION_COUNTER) actionsCounter.save(1500);
-    // if(USE_ACTION_COUNTER)
-    //     console.log('end', (Game.cpu as any)._getUsed().toFixed(3), 'excute percentage',
-    //         (1 - actionsCounter.getData().totalCPU / (Game.cpu as any)._getUsed()).toFixed(3));
 
-    Game.industry = { getAllRaw: Industry.getAllRaw, produce: (a1, a2, a3) => Industry.produce(a1, a2, a3), calIndustryProfit: (log) => Industry.calIndustryProfit(log) };
+    Game.industry = { getAllRaw: Industry.getAllRaw, produce: (a1, a2, a3) => Industry.produce(a1, a2, a3), calIndustryProfit: (log) => Industry.calIndustryProfit(log), neededAmount: (a1, a2) => Industry.neededAmount(a1, a2) };
     global['GC'] = GC;
     (Game as any).reset = () => Processes.rebuildProcesses();
     (Game as any).printProcesses = () => console.log(JSON.stringify(Process.processes, undefined, 4));
@@ -250,6 +250,8 @@ function GC() {
     delete Memory['roomFlags'];
     delete Memory['beingAttacking'];
     delete Memory['statistics'];
+    delete Memory['lastChangeCredits'];
+    delete Memory['lastTickCredits'];
 
     let collectedMarket = 0;
     for (const roomName in Memory.market) {
@@ -304,32 +306,3 @@ function tryInitSameMemory(): boolean {
         return false;
     }
 }
-
-/*
-    if(Game.shard.name == 'shard3') {
-        let PIONEER = Game.creeps['PIONEER'];
-        if(PIONEER) {
-            PIONEER.travelTo(new RoomPosition(13, 15, 'E50N20'))
-        }
-    }
-    if(Game.shard.name == 'shard2') {
-        let PIONEER = Game.creeps['PIONEER'];
-        if(PIONEER) {
-            if(Game.cpu.bucket <= 2) return;
-            PIONEER.travelTo(new RoomPosition(26, 7, 'E55N21'));
-            let c = Game.getObjectById<StructureController>('59f1a6b482100e1594f406e8');
-            if(c && PIONEER.pos.inRangeTo(c, 1)) {
-                PIONEER.claimController(c);
-                PIONEER.signController(c, '🙃');
-                // PIONEER.suicide();
-                return;
-            }
-            return;
-        }
-    }
-    if(Game.shard.name != 'shard3' && Game.shard.name != 'shard0') {
-        _.forEach(Game.creeps, creep => creep.suicide());
-        return;
-    }
-
-*/

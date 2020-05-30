@@ -17,21 +17,22 @@ export class Tower {
                 return (structure.hits - structure.hitsMax * 0.5) / CONTAINER_DECAY * CONTAINER_DECAY_TIME_OWNED;
             }
             if(structure.structureType == STRUCTURE_RAMPART){
-                return (structure.hits - 100000) / RAMPART_DECAY_AMOUNT * RAMPART_DECAY_TIME;
+                return (structure.hits - 10000) / RAMPART_DECAY_AMOUNT * RAMPART_DECAY_TIME;
             }
             if(structure.structureType == STRUCTURE_WALL){
-                if(structure.hits < 100000) return 0;
                 return Infinity;
             }
             if(structure.hits < structure.hitsMax) return -Infinity;
             return Infinity;
         }
         let towers = room.towers;
-        let injuredCreeps = room.find(FIND_MY_CREEPS, {
+        let injuredCreeps: (Creep | PowerCreep)[] = room.find(FIND_MY_CREEPS, {
             filter: (creep) => {
                 return creep.hits < creep.hitsMax;
             }
         });
+        injuredCreeps.push(...room.find(FIND_MY_POWER_CREEPS, {filter: pc => pc.hits < pc.hitsMax }));
+        
         let enemies: AnyCreep[] = room.find(FIND_HOSTILE_CREEPS, {filter: creep => hasAggressiveBodyParts(creep, false)});
         enemies.concat(room.find(FIND_HOSTILE_POWER_CREEPS));
 

@@ -63,7 +63,7 @@ export class RoadPlanner{
     generatePathTo(pos: RoomPosition, cutting: number = 0): RoomPosition[]{
         let center = Memory.stableData[this.roomName].basePosition as RoomPosition;
         center = new RoomPosition(center.x + 5, center.y + 5, this.roomName);
-        let result = PathFinder.search(center, {pos: pos, range: 1}, { maxOps: 1e4,
+        let result = PathFinder.search(center, {pos: pos, range: 1}, { maxOps: 1e4, heuristicWeight: 1,
             roomCallback: roomName => intel[roomName] ? intel[roomName].buildingCostMatrix : false });
         result.path.splice(result.path.length - cutting, cutting);
         result.path.unshift(center);

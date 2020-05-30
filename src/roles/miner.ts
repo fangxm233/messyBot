@@ -14,7 +14,7 @@ export class RoleMiner extends Role{
             return;
         }
 
-        if(extractor.cooldown == 0)
+        if(extractor.cooldown == 0 && container.store.getFreeCapacity())
             this.creep.harvest(mineral);
     }
 }

@@ -13,12 +13,12 @@ import { USER_NAME } from "../../config";
 import { ErrorMapper } from "../../utils/ErrorMapper";
 
 const roleToCompounds = {
-    'warrior': ['XKHO2', 'XZHO2', 'XGHO2'],//XKHO2 //XUH2O
+    'warrior': ['XKHO2', 'XZHO2', 'XGHO2'],//ra: XKHO2 //a: XUH2O //w: XZH2O
     'destroyer': ['XZH2O', 'XZHO2', 'XGHO2'],
     'healer': ['XLHO2', 'XZHO2', 'XGHO2']
 };
 
-export const healerNumPerGroup: number = 1;
+// export const healerNumPerGroup: number = 1;
 
 export const healerPos: {
     left: {
@@ -82,6 +82,9 @@ export class ProcessAttack extends Process{
     adGroupNum: number;
     arGroupNum: number;
 
+    adHealerNum: number;
+    arHealerNum: number;
+
     targetCreeps: (Creep | PowerCreep)[] = [];
     agressiveCreeps: Creep[] = [];
 
@@ -108,21 +111,31 @@ export class ProcessAttack extends Process{
     }
 
     run() {
-        this.adGroupNum = 0;
-        this.arGroupNum = 0;
+        this.adGroupNum = undefined as any;
+        this.arGroupNum = undefined as any;
+        this.adHealerNum = undefined as any;
+        this.arHealerNum = undefined as any;
         _.forEach(_.filter(Game.flags, flag => 
-            flag.pos.roomName == this.targetRoom && flag.name.match(this.roomName) && (flag.name.match('ad') || flag.name.match('ar'))),
+            flag.pos.roomName == this.targetRoom && flag.name.match(this.roomName)),
             flag => {
                 if(flag.name.match('ad')) {
-                    let num = Number.parseInt(flag.name.split('_')[2]);
-                    if(num > this.adGroupNum) this.adGroupNum = num;
+                    let strings = flag.name.split('_');
+                    let num = Number.parseInt(strings[2]);
+                    if(num >= (this.adGroupNum || 0)) {
+                        this.adGroupNum = num;
+                        this.adHealerNum = Number.parseInt(strings[3]);
+                    }
                 } else if(flag.name.match('ar')) {
-                    let num = Number.parseInt(flag.name.split('_')[2]);
-                    if(num > this.arGroupNum) this.arGroupNum = num;
+                    let strings = flag.name.split('_');
+                    let num = Number.parseInt(strings[2]);
+                    if(num >= (this.arGroupNum || 0)) {
+                        this.arGroupNum = num;
+                        this.arHealerNum = Number.parseInt(strings[3]);
+                    }
                 }
             });
 
-        if(!this.adGroupNum && !this.arGroupNum) {
+        if(this.adGroupNum === undefined && this.arGroupNum === undefined) {
             this.close();
             return;
         }
@@ -136,12 +149,14 @@ export class ProcessAttack extends Process{
         let destroyers = _.map(creeps['destroyer'], creep => RoleFactory.getRole(creep, creep => new RoleDestroyer(creep)) as RoleDestroyer);
         let healers = _.map(creeps['healer'], creep => RoleFactory.getRole(creep, creep => new RoleHealer(creep)) as RoleHealer);
 
+        if(healers.length < (this.adGroupNum || 0) * (this.adHealerNum || 0) + (this.arGroupNum || 0) * (this.arHealerNum || 0)) CreepWish.wishCreep(this.roomName, 'healer', this.fullId);
         if(warriors.length < this.arGroupNum) CreepWish.wishCreep(this.roomName, 'warrior', this.fullId, {healerName: []});
         if(destroyers.length < this.adGroupNum) CreepWish.wishCreep(this.roomName, 'destroyer', this.fullId, {healerName: []});
-        if(healers.length < (this.adGroupNum + this.arGroupNum) * healerNumPerGroup) CreepWish.wishCreep(this.roomName, 'healer', this.fullId);
-        
+        // if(healers.length < destroyers.length * (this.adHealerNum || 0) + warriors.length * (this.arHealerNum || 0)) CreepWish.wishCreep(this.roomName, 'healer', this.fullId);
+        // console.log(healers.length, destroyers.length * this.adHealerNum, warriors.length * this.arHealerNum);
+        // console.log(healers.length < destroyers.length * (this.adHealerNum || 0) + warriors.length * (this.arHealerNum || 0));
         (<(RoleWarrior | RoleDestroyer)[]>[]).concat(destroyers, warriors).forEach(role => {
-            if(role.creep.memory.healerName.length < healerNumPerGroup && !role.creep.spawning && this.boostFlag[role.creep.name] == 'boosted') {
+            if(role.creep.memory.healerName.length < (role instanceof RoleWarrior ? this.arHealerNum : this.adHealerNum) && !role.creep.spawning && this.boostFlag[role.creep.name] == 'boosted') {
                 role.creep.notifyWhenAttacked(false);
                 let freeHealer = healers.filter(role => !role.creep.memory.healingName && !role.creep.spawning)[0];
                 if(freeHealer && this.boostFlag[freeHealer.creep.name] == 'boosted') {
@@ -155,13 +170,13 @@ export class ProcessAttack extends Process{
         _.forEach(creeps, (creeps, role) => creeps.forEach(creep => {
             if(!role) return;
             let enough = ProcessBoost.enoughToBoost(this.roomName, roleToCompounds[role], creep);
-            if(!enough) {
-                console.log(`Process attack: ${this.roomName} compound used up`);
-                Game.notify(`Process attack: ${this.roomName} compound used up`);
-                _.forEach(_.filter(Game.flags, flag => flag.pos.roomName == this.targetRoom && (flag.name.match('ar') || flag.name.match('ad'))), flag => flag.remove());
-                this.close();
-                return false;
-            }
+            // if(!enough) {
+            //     console.log(`Process attack: ${this.roomName} compound used up`);
+            //     Game.notify(`Process attack: ${this.roomName} compound used up`);
+            //     _.forEach(_.filter(Game.flags, flag => flag.pos.roomName == this.targetRoom && (flag.name.match('ar') || flag.name.match('ad'))), flag => flag.remove());
+            //     this.close();
+            //     return false;
+            // }
             if(!creep.spawning && this.boostFlag[creep.name] == 'none' && !Process.getProcess(this.roomName, 'boost')) {
                 Processes.processBoost(this.roomName, roleToCompounds[role], creep.name, this.fullId);
                 this.boostFlag[creep.name] = 'boosting';
@@ -170,28 +185,32 @@ export class ProcessAttack extends Process{
             return;
         }));
 
-        let matrix = ProcessAttack.getHitsMatrix(this.targetRoom);
-        if(matrix) ProcessAttack.hitsMatrix[this.targetRoom] = matrix;
+        let targetRoom = this.targetRoom;
+        if(Game.flags.t) targetRoom = Game.flags.t.pos.roomName;
 
-        let targetRoom = Game.rooms[this.targetRoom];
-        if(targetRoom) {
-            this.targetCreeps = targetRoom.find(FIND_HOSTILE_CREEPS);
-            this.targetCreeps.push(...targetRoom.find(FIND_HOSTILE_POWER_CREEPS));
-            this.agressiveCreeps = targetRoom.find(FIND_HOSTILE_CREEPS, {filter: creep => hasAggressiveBodyParts(creep, false)});
-        } else {
-            this.targetCreeps = [];
-            this.agressiveCreeps = [];
-        }
+        let matrix = ProcessAttack.getHitsMatrix(targetRoom);
+        if(matrix) ProcessAttack.hitsMatrix[targetRoom] = matrix;
 
-        warriors.forEach(warrior => this.runCreep(warrior));
-        destroyers.forEach(destroyer => this.runCreep(destroyer));
+        // let targetRoom = Game.rooms[this.targetRoom];
+        // if(targetRoom) {
+        //     this.targetCreeps = targetRoom.find(FIND_HOSTILE_CREEPS);
+        //     this.targetCreeps.push(...targetRoom.find(FIND_HOSTILE_POWER_CREEPS));
+        //     this.agressiveCreeps = targetRoom.find(FIND_HOSTILE_CREEPS, {filter: creep => hasAggressiveBodyParts(creep, false)});
+        // } else {
+        //     this.targetCreeps = [];
+        //     this.agressiveCreeps = [];
+        // }
+
+        warriors.forEach(warrior => this.runCreep(warrior, this.arHealerNum));
+        destroyers.forEach(destroyer => this.runCreep(destroyer, this.adHealerNum));
         healers.forEach(healer => this.runCreep(healer));
     }
 
-    runCreep(role: RoleWarrior | RoleDestroyer | RoleHealer) {
+    runCreep(role: RoleWarrior | RoleDestroyer | RoleHealer, healerNum?: number) {
         if(this.boostFlag[role.creep.name] != 'boosted') return;
         // console.log(role.creep.name);
         role.process = this;
+        if(!(role instanceof RoleHealer) && healerNum) role.healerNum = healerNum;
         try {
             role.run();
         } catch (error) {
@@ -229,16 +248,17 @@ export class ProcessAttack extends Process{
     getTargets(pos: RoomPosition, creep?: boolean): (AnyStructure | Creep | ConstructionSite)[] {
         let room = Game.rooms[this.targetRoom];
         if(!room) return [];
-        if(room.extensions.filter(structure => !structure.my).length) return room.extensions.filter(structure => !structure.my);
-        if(room.terminal && !room.terminal.my) return [room.terminal];
+        // if(room.extensions.filter(structure => !structure.my).length) return room.extensions.filter(structure => !structure.my);
+        // if(room.terminal && !room.terminal.my) return [room.terminal];
         let easyTargets = room.structures.filter(structure => !structure.pos.lookForStructure(STRUCTURE_RAMPART) && 
             structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART && 
             structure.structureType != STRUCTURE_ROAD && structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_CONTROLLER && 
-            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL 
-            && structure.structureType != STRUCTURE_LINK && !structure.my);
+            structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL
+            && structure.structureType != STRUCTURE_POWER_BANK && structure.structureType != STRUCTURE_LINK && !structure.my);
         if(easyTargets.length) return easyTargets;
         if(room.spawns.filter(structure => !structure.my).length) return room.spawns.filter(structure => !structure.my);
         if(room.towers.filter(structure => !structure.my).length) return room.towers.filter(structure => !structure.my);
+        if(room.terminal && !room.terminal.my) return [room.terminal];
         if(room.storage && !room.storage.my) return [room.storage];
         if(room.nuker && !room.nuker.my) return [room.nuker];
         if(room.invaderCore) return [room.invaderCore];
@@ -246,7 +266,7 @@ export class ProcessAttack extends Process{
         let targets = room.structures.filter(structure => structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART && 
             structure.structureType != STRUCTURE_ROAD && structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_CONTROLLER && 
             structure.structureType != STRUCTURE_KEEPER_LAIR && structure.structureType != STRUCTURE_EXTRACTOR && structure.structureType != STRUCTURE_PORTAL 
-            && !structure.my);
+            && structure.structureType != STRUCTURE_POWER_BANK&& !structure.my);
         let hostle = room.find(FIND_HOSTILE_CREEPS);
         if(targets.length) return targets;
         else if(creep && hostle.length) return hostle;
@@ -256,10 +276,10 @@ export class ProcessAttack extends Process{
 
     close() {
         let close = true;
-        this.foreachCreep(creep => {
-            if(creep.spawning) close = false;
-            creep.suicide()
-        });
+        // this.foreachCreep(creep => {
+        //     if(creep.spawning) close = false;
+        //     creep.suicide()
+        // });
         if(close) super.close();
         return;
     }

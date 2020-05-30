@@ -3,6 +3,11 @@ import { profile } from "../../profiler/decorator";
 import { getTargetBodyPart } from "../../utils";
 import { RoomPlanner } from "../../roomPlanner/RoomPlanner";
 
+export let compoundOrder = [
+    // 'XLHO2', 'XGHO2', 'XZHO2','XZH2O','XUH2O', 'XKHO2', 'XGH2O', 'XLH2O', 'XUHO2', 'XKH2O'
+    'XGH2O', 'XLHO2', 'XGHO2', 'XZHO2','XZH2O','XUH2O', 'XKHO2', 'XLH2O', 'XUHO2', 'XKH2O'
+];
+
 @profile
 export class ProcessBoost extends Process {
     memory: ProcessBoostInterface;
@@ -23,6 +28,8 @@ export class ProcessBoost extends Process {
         if(!room) return false;
         let terminal = room.terminal;
         if(!terminal) return false;
+        let rp = new RoomPlanner(roomName);
+        let labs = rp.getLabs();
         
         for (const compound of compoundTypes) {
             let part = getTargetBodyPart(compound);
@@ -33,16 +40,22 @@ export class ProcessBoost extends Process {
             else {
                 partCount = _.countBy(creep)[part];
             }
-            if((terminal.store[compound] || 0) < partCount * 30) return false;
+            let labStore = 0;
+            let index = compoundOrder.findIndex(c => c == compound);
+            if(index != -1) {
+                let lab = labs[index];
+                if(lab && lab.mineralType == compound) labStore = lab.store[compound] || 0;
+            }
+            if((terminal.store[compound] || 0) + labStore < partCount * 30) return false;
         }    
         return true;
     }
 
-    constructor(roomName: string, compoundTypes: MineralBoostConstant[], creepName: string, processId: string) {
+    constructor(roomName: string, compoundTypes: MineralBoostConstant[], creepName: string, processId?: string) {
         super(roomName, 'boost');
         this.compoundTypes = compoundTypes;
         this.creepName = creepName;
-        this.processId = processId;
+        this.processId = processId || '';
         this.boostState = 'waiting';
     }
 
@@ -61,22 +74,28 @@ export class ProcessBoost extends Process {
         let creep = Game.creeps[this.creepName];
         if(!creep) {
             this.setBoostState('withdrawing');
+            return;
         }
         let rp = new RoomPlanner(this.roomName);
+        if(rp.getLabs().length < this.compoundTypes.length) {
+            this.close();
+            return;
+        }
 
         if(this.boostState == 'waiting' && !creep.spawning) this.setBoostState('filling');
 
+        let pos = this.getBoostPos(creep, this.compoundTypes, rp)
         if(this.boostState == 'filling') {
-            if(!creep.pos.inRangeTo(rp.getBoostPos(), 4)) {
-                creep.travelTo(rp.getBoostPos());
+            if(!creep.pos.inRangeTo(pos, 4)) {
+                creep.travelTo(pos);
             }
             return;
         }
 
         if(this.boostState == 'withdrawing') return;
 
-        if(!creep.pos.isEqualTo(rp.getBoostPos())) {
-            creep.travelTo(rp.getBoostPos(), {repath: 0.5});
+        if(!creep.pos.isEqualTo(pos)) {
+            creep.travelTo(pos, {repath: 0.5});
             return;
         }
 
@@ -86,11 +105,21 @@ export class ProcessBoost extends Process {
 
         // Give back the creep ahead of time but close after withdraw is finished.
         let process = Process.getProcess(this.processId);
-        if(!process) {
-            this.close();
-            return;
+        if(process) {
+            process.boostedCreep(this.creepName, this.compoundTypes);        
         }
-        process.boostedCreep(this.creepName, this.compoundTypes);
+    }
+
+    getBoostPos(creep: Creep, compoundTypes: MineralBoostConstant[], roomPlanner: RoomPlanner) {
+        for (let i = 0; i < compoundOrder.length; i++) {
+            const compound = compoundOrder[i];
+            if(_.contains(compoundTypes, compound) && !creep.boostCounts[compound]) {
+                let pos = roomPlanner.getBoostPos();
+                if(i > 5) return new RoomPosition(pos.x + 1, pos.y - 1, pos.roomName);
+                else return pos;
+            }
+        }
+        return roomPlanner.getBoostPos();
     }
 
     getStruct(): ProcessBoostInterface{

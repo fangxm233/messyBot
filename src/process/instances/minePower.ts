@@ -14,6 +14,8 @@ export class ProcessMinePower extends Process{
 
     targetName: string;
 
+    aheadTime = 0;
+
     constructor(roomName: string, targetName: string){
         super(roomName, 'minePower');
         this.targetName = targetName;
@@ -36,6 +38,8 @@ export class ProcessMinePower extends Process{
         let room = intel[this.targetName];
         this.foreachCreep(()=>{});
         let creeps = _.groupBy(_.map(this.creeps, creepName => Game.creeps[creepName]), creep => creep.memory.role);
+        if(!creeps['powerAttack']) creeps['powerAttack'] = [];
+        if(!creeps['powerHealer']) creeps['powerHealer'] = [];
 
         if(room){
             if(!room.powerBank && !room.dropPower && !room.ruin){
@@ -54,10 +58,16 @@ export class ProcessMinePower extends Process{
                 }
             }
             if(room.powerBank){
+                if(!this.aheadTime) {
+                    let coord1 = new RoomPosition(25, 25, this.roomName).roomCoords;
+                    let coord2 = new RoomPosition(25, 25, this.targetName).roomCoords;
+                    let dis = Math.abs(coord1.x - coord2.x) + Math.abs(coord1.y - coord2.y) * 50;
+                    this.aheadTime = dis + 150;
+                }
                 this.foreachCreep((creep) => this.runCreep(creep));
-                if(!creeps['powerAttack']) CreepWish.wishCreep(this.roomName, 'powerAttack', this.fullId);
-                if(!creeps['powerHealer']) CreepWish.wishCreep(this.roomName, 'powerHealer', this.fullId);
-                if(!creeps['powerRange']) CreepWish.wishCreep(this.roomName, 'powerRange', this.fullId);
+                if(!creeps['powerAttack'].filter(creep => (creep.ticksToLive || 1500) > this.aheadTime).length) CreepWish.wishCreep(this.roomName, 'powerAttack', this.fullId);
+                if(!creeps['powerHealer'].filter(creep => (creep.ticksToLive || 1500) > this.aheadTime).length) CreepWish.wishCreep(this.roomName, 'powerHealer', this.fullId);
+                // if(!creeps['powerRange']) CreepWish.wishCreep(this.roomName, 'powerRange', this.fullId);
                 if(room.powerBank.hits <= 180000) {
                     let num = Math.round(room.powerBank.amount / 1600);
                     if(!creeps['transporter'] || creeps['transporter'].length < num) CreepWish.wishCreep(this.roomName, 'transporter', this.fullId, { target: this.targetName });

@@ -1,14 +1,9 @@
 import { RoleTransporter } from "./transporter";
-import { RoleStableTransporter } from "./stableTransporter";
 import { RoleHarvester } from "./harvester";
 import { RoleHauler } from "./hauler";
 import { RoleDismantler } from "./dismantler";
 import { RoleUpgrader } from "./upgrader";
 import { RoleReservist } from "./reservist";
-import { RoleTrader } from "./trader";
-import { RoleWarrior } from "./attack/warrior";
-import { RoleDestroyer } from "./attack/destroyer";
-import { RoleHealer } from "./attack/healer";
 import { RoleWorker } from "./worker";
 import { RolePioneer } from "./pioneer";
 import { RoleMiner } from "./miner";
@@ -18,19 +13,19 @@ import { Role } from "./role";
 
 const creepRoles: { [name: string]: Role | undefined } = {};
 
-export class RoleFactory{
+export class RoleFactory {
 
-    static getRole(creep: Creep, constructor?: (creep: Creep) => Role): Role | undefined{
+    static getRole(creep: Creep, constructor?: (creep: Creep) => Role): Role | undefined {
         let role = this.getRoleCore(creep, constructor);
-        if(role) role.creep = creep;
+        if (role) role.creep = creep;
         return role;
     }
 
-    private static getRoleCore(creep: Creep, constructor?: (creep: Creep) => Role): Role | undefined{
-        if(creepRoles[creep.name]) {
+    private static getRoleCore(creep: Creep, constructor?: (creep: Creep) => Role): Role | undefined {
+        if (creepRoles[creep.name]) {
             return creepRoles[creep.name];
         }
-        if(constructor) return creepRoles[creep.name] = constructor(creep);
+        if (constructor) return creepRoles[creep.name] = constructor(creep);
         return creepRoles[creep.name] = this.getInstance(creep);
     }
 
@@ -42,12 +37,10 @@ export class RoleFactory{
         return this.getSpecificRoleInstance(creep, creep.memory.role);
     }
 
-    private static getSpecificRoleInstance(creep: Creep, role: string){
+    private static getSpecificRoleInstance(creep: Creep, role: string) {
         switch (role) {
             case 'transporter':
                 return new RoleTransporter(creep);
-            case 'stableTransporter':
-                return new RoleStableTransporter(creep);
             case 'manager':
                 return new RoleManager(creep);
             case 'harvester':
@@ -64,16 +57,14 @@ export class RoleFactory{
                 return new RoleReservist(creep);
             case 'miner':
                 return new RoleMiner(creep);
-            case 'trader':
-                return new RoleTrader(creep);
             case 'pioneer':
                 return new RolePioneer(creep);
             case 'filler':
                 return new RoleFiller(creep);
             default:
                 return;
-                // console.log('unhandled role', role);
-                // throw new Error('unhandled role ' + role)
+            // console.log('unhandled role', role);
+            // throw new Error('unhandled role ' + role)
         }
     }
 }

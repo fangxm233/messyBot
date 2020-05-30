@@ -11,6 +11,7 @@ export class Traveler {
     private static structureMatrixTick: number;
 
     private static moveRecord: { [name: string]: number } = {};
+    private static cachedPaths: {[fromAndDes: string]: {time: number, path: string}};
 
     /**
      * move creep to destination
@@ -23,7 +24,7 @@ export class Traveler {
     public static travelTo(creep: Creep, destination: HasPos|RoomPosition, options: TravelToOptions = {}): number {
 
         // uncomment if you would like to register hostile rooms entered
-        // this.updateRoomStatus(creep.room);
+        this.updateRoomStatus(creep.room);
 
         if (!destination) {
             return ERR_INVALID_ARGS;
@@ -167,6 +168,14 @@ export class Traveler {
         return this.move(creep, nextDirection as DirectionConstant);
     }
 
+    public static interShardTravel(creep: Creep, path: {shard: string, roomName: string, x: number, y: number}[], destination: {shard: string, roomName: string}): boolean {
+        if(creep.room.name == destination.roomName && Game.shard.name == destination.shard) return true;
+        let des = _.min(path.filter(path => path.shard == Game.shard.name), path => Game.map.getRoomLinearDistance(creep.room.name, path.roomName));
+        if(!des) return true;
+        this.travelTo(creep, new RoomPosition(des.x, des.y, des.roomName));
+        return false;
+    }
+
     public static avoidEdge(creep: Creep) {
         if(creep.pos.isEdge) {
             Traveler.move(creep, creep.pos.getDirectionTo(creep.pos.availableNeighbors().filter(pos => !pos.isEdge)[0]));
@@ -189,7 +198,7 @@ export class Traveler {
                     7: '←',
                     8: '↖'
                 };
-                creep.say('goto ' + dirtoarrow[dir])
+                creep.say(dirtoarrow[dir])
                 let outcome = obstructingCreep.move(dir);
                 if(outcome == OK){
                     let data = obstructingCreep.memory._trav;
@@ -350,6 +359,7 @@ export class Traveler {
                                  options: TravelToOptions = {}): PathfinderReturn {
 
         _.defaults(options, {
+            allowHostile: true,
             ignoreCreeps: true,
             maxOps: DEFAULT_MAXOPS,
             range: 1,

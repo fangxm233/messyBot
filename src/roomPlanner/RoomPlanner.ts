@@ -171,7 +171,7 @@ export class RoomPlanner{
             linkPosition: {},
             harvesterPath: {}
         })
-
+        
         if(!finished) return;
 
         finished = true;
@@ -358,17 +358,6 @@ export class RoomPlanner{
             this.addPosToMatrix(matrix, buildings.observer.pos, 0xff);
 
             this.addPosToMatrix(matrix, buildings.road.pos, EXISTING_PATH_COST);
-
-            for (let x = -1; x < 12; x++) {
-                let pos = this.toRoomPos({x: x, y: -1});
-                if(!(x >= 4 && x <= 6)) matrix.set(pos.x, pos.y, 0xff);
-                if(!(x >= 4 && x <= 6)) matrix.set(pos.x, pos.y + 12, 0xff);
-            }
-            for (let y = -1; y < 12; y++) {
-                let pos = this.toRoomPos({x: -1, y: y});
-                if(!(y >= 4 && y <= 6)) matrix.set(pos.x, pos.y, 0xff);
-                if(!(y >= 4 && y <= 6)) matrix.set(pos.x + 12, pos.y, 0xff);
-            }
         } else if(room){
             room.structures.forEach(structure => matrix.set(structure.pos.x, structure.pos.y, 
                 !structure.isWalkable ? 0xff : structure.structureType == STRUCTURE_ROAD ? EXISTING_PATH_COST : PLAIN_COST))
@@ -402,7 +391,7 @@ export class RoomPlanner{
         let missingSpawn = this.checkMissongBuildings(STRUCTURE_SPAWN, layout.spawn.pos);
         if(missingSpawn && missingSpawn.length){
             this.createConstructionSites(STRUCTURE_SPAWN, missingSpawn, true);
-            return false;;
+            return false;
         }
 
         let missingRoad = this.checkMissongBuildings(STRUCTURE_ROAD, layout.road.pos);
@@ -655,8 +644,6 @@ export class RoomPlanner{
         let order: (StructureExtension | StructureSpawn)[] = [];
 
         for (let region = 0; region < 3; region++) {
-            let spawn = this.getSpawn(region);
-            if(spawn) order.push(spawn);
             for (let index = 0; index < 6; index++) {
                 let structure = this.getForAtBase(STRUCTURE_EXTENSION, this.getExstensionPos(region, index));
                 if(structure) order.push(structure);
@@ -676,6 +663,7 @@ export class RoomPlanner{
                 if(structure) order.push(structure);
             }
         }
+        order.push(...Game.rooms[this.roomName].spawns)
 
         return order;
     }
@@ -721,18 +709,18 @@ export class RoomPlanner{
     }
 
     public getLabs(): StructureLab[]{
-        if(this.rcl < 8) return [];
+        if(this.rcl < 6) return [];
         return _.compact(structureLayout[this.rcl].buildings[STRUCTURE_LAB].pos.map(coord => this.getForAtBase(STRUCTURE_LAB, coord))) as any;
     }
 
     public getMineralLabs(): StructureLab[]{
-        if(this.rcl < 8) return [];
+        if(this.rcl < 6) return [];
         let labs = structureLayout[this.rcl].buildings[STRUCTURE_LAB].pos;
         return _.compact([this.getForAtBase(STRUCTURE_LAB, labs[4]), this.getForAtBase(STRUCTURE_LAB, labs[5])]) as any;
     }
 
     public getProductLabs(): StructureLab[]{
-        if(this.rcl < 8) return [];
+        if(this.rcl < 6) return [];
         let labs = structureLayout[this.rcl].buildings[STRUCTURE_LAB].pos;
         return _.compact([this.getForAtBase(STRUCTURE_LAB, labs[0]), this.getForAtBase(STRUCTURE_LAB, labs[1]),
             this.getForAtBase(STRUCTURE_LAB, labs[2]), this.getForAtBase(STRUCTURE_LAB, labs[3]),

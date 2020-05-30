@@ -15,7 +15,6 @@ export class RoleDefencer extends Role{
     }
 
     run() {
-        this.creep.notifyWhenAttacked(false);
         if(this.type == 'creep') this.runDefencer(this.invaders, this.wounded);
         if(this.type == 'coreDis') this.runCoreDis();
     }

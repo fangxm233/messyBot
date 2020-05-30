@@ -50,6 +50,9 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_CATALYST] : 0.125 * 1000,
     [RESOURCE_ENERGY]   : 0.025 * 1000,
     [RESOURCE_POWER]    : 0.5 * 1000,
+    [RESOURCE_CATALYZED_GHODIUM_ACID]: 5 * 1000,
+    [RESOURCE_SILICON]  : 6 * 1000,
+    [RESOURCE_MIST]     : 4 * 1000,
 };
 export const minMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_HYDROGEN]     : 0.02 * 1000,
@@ -69,14 +72,31 @@ export const minMarketPrices: { [resourceType: string]: number } = {
     [RESOURCE_KEANIUM_BAR]  : 0.25 * 1000,
     [RESOURCE_PURIFIER]     : 0.95 * 1000,
     [RESOURCE_EMANATION]    : 14000 * 1000,
-    [RESOURCE_ESSENCE]      : 47000 * 1000,
+    [RESOURCE_ESSENCE]      : 100000 * 1000,
+    [RESOURCE_ORGANISM]     : 160000 * 1000,
+    [RESOURCE_MACHINE]      : 190000 * 1000,
+    [RESOURCE_DEVICE]       : 170000 * 1000,
 };
 
-const neededType = [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY];
+const neededType: ResourceConstant[] = [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_CATALYZED_GHODIUM_ACID];
+if(Game.shard.name == 'shard3' && USER_NAME == 'fangxm') neededType.push(...[RESOURCE_SILICON, RESOURCE_MIST]);
 
-const sellType: ResourceConstant[] = 
-    [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, /*RESOURCE_KEANIUM,*/ RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_POWER,
-    /*RESOURCE_OXIDANT, RESOURCE_REDUCTANT, RESOURCE_ZYNTHIUM_BAR, RESOURCE_LEMERGIUM_BAR, RESOURCE_UTRIUM_BAR, RESOURCE_KEANIUM_BAR,*/ RESOURCE_ESSENCE];
+let _sellType: ResourceConstant[] = [];
+if(Game.shard.name == 'shard3') {
+    _sellType = [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_POWER,
+        RESOURCE_ESSENCE, RESOURCE_ORGANISM, RESOURCE_MACHINE, RESOURCE_DEVICE];
+}
+// if(USER_NAME == 'fangxm' && Game.shard.name == 'shard3') {
+//     _sellType = [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_POWER,
+//         RESOURCE_ESSENCE];
+// }
+if(Game.shard.name == 'shard2') {
+    _sellType = [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_POWER];
+}
+
+const sellType: ResourceConstant[] = _sellType;
+    // [RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST, RESOURCE_ENERGY, RESOURCE_POWER,
+    // /*RESOURCE_OXIDANT, RESOURCE_REDUCTANT, RESOURCE_ZYNTHIUM_BAR, RESOURCE_LEMERGIUM_BAR, RESOURCE_UTRIUM_BAR, RESOURCE_KEANIUM_BAR,*/ RESOURCE_ESSENCE];
 
 const balanceTypes: ResourceConstant[] = [RESOURCE_ENERGY, RESOURCE_POWER, RESOURCE_OPS, RESOURCE_MIST, RESOURCE_SILICON, RESOURCE_BIOMASS, RESOURCE_METAL,
     RESOURCE_HYDROGEN, RESOURCE_OXYGEN, RESOURCE_UTRIUM, RESOURCE_LEMERGIUM, RESOURCE_KEANIUM, RESOURCE_ZYNTHIUM, RESOURCE_CATALYST];
@@ -117,7 +137,7 @@ export class Market{
                 let market = Memory.market[roomName];
                 let storage = Game.rooms[roomName].storage;
                 if(!storage) continue;
-                if(storage.store.energy > 650000 && !market.transport)
+                if(storage.store.energy > 700000 && !market.transport)
                     market.transport = { type: RESOURCE_ENERGY, amount: 20000, des: Memory.poorRoom};
             }
         }
@@ -131,6 +151,8 @@ export class Market{
         // if(order2 && order2.price < mp.price * 0.001 && mp.price * 0.001 <= 0.05) {
         //     Game.market.changeOrderPrice('5e2d29d44ea8056fe3ba8b42', mp.price * 0.001)
         // }
+
+        if(Game.time % 20 == 0) this.postOrders();
 
         _.remove(this.roomsToDeal, this.hasOrder);
         if(!this.roomsToDeal.length) return;
@@ -149,11 +171,11 @@ export class Market{
         _.remove(this.roomsToDeal, this.hasOrder);
         if(!this.roomsToDeal.length) return;
 
-        this.roomsToDeal = this.getStoredGreaterEqualThan(this.roomsToDeal, RESOURCE_ENERGY, config.startTradeEnergy, 'storage');
-        _.remove(this.roomsToDeal, roomName => Memory.poorRoom == roomName);
-        if(!this.roomsToDeal.length) return;
+        // this.roomsToDeal = this.getStoredGreaterEqualThan(this.roomsToDeal, RESOURCE_ENERGY, config.startTradeEnergy, 'storage');
+        // _.remove(this.roomsToDeal, roomName => Memory.poorRoom == roomName);
+        // if(!this.roomsToDeal.length) return;
 
-        this.lookForGoodDeal();
+        // this.lookForGoodDeal();
     }
 
     static balanceResources(){
@@ -206,7 +228,7 @@ export class Market{
             let stored = this.getStored(this.roomsToDeal, materialType);
             if(!stored.length) continue;
             if(materialType == RESOURCE_ENERGY && !sellEnergy) continue;
-            if(materialType == RESOURCE_ESSENCE){
+            if(materialType == RESOURCE_ESSENCE || materialType == RESOURCE_ORGANISM || materialType == RESOURCE_MACHINE || materialType == RESOURCE_DEVICE){
                 let storedMoreThan = this.getStoredGreaterEqualThan(stored, materialType, 2, 'terminal');
                 if(!storedMoreThan.length) continue;
                 let orders = this.getAllOrders({resourceType: materialType, type: ORDER_BUY});
@@ -240,7 +262,7 @@ export class Market{
                 _.remove(this.roomsToDeal, this.hasOrder);
             }else{
                 let storedMoreThan = this.getStoredGreaterEqualThan(
-                    stored, materialType, this.isCommodities(materialType) ? 10000 : config.maxMineralAmount + 15000, 'terminal');
+                    stored, materialType, this.isCommodities(materialType) ? 10000 : config.maxMineralAmount + 10000, 'terminal');
                 if(!storedMoreThan.length) continue;
                 let orders = this.getAllOrders({resourceType: materialType, type: ORDER_BUY});
                 orders = orders.filter(order => order.amount >= 1000 && order.price >= minMarketPrices[order.resourceType] && !this.isStarted(order))
@@ -267,7 +289,7 @@ export class Market{
             let storedLessThan = this.getStoredLessThan(this.roomsToDeal, materialType, config.minMineralAmount, 'terminal');
             if(!storedLessThan.length) continue;
             let orders = this.getAllOrders({resourceType: materialType, type: ORDER_SELL});
-            orders = orders.filter(order => order.amount >= 1000 && order.price <= maxMarketPrices[order.resourceType] && !this.isStarted(order))
+            orders = orders.filter(order => order.amount >= 100 && order.price <= maxMarketPrices[order.resourceType] && !this.isStarted(order))
             if(!orders.length) continue;
             for (const roomName of storedLessThan) {
                 let terminal = Game.rooms[roomName].terminal;
@@ -283,6 +305,7 @@ export class Market{
 
     static lookForGoodDeal(){
         this.dt = 0;
+        console.log(this.roomsToDeal.length)
         for (const materialType of neededType) {
             if(!this.roomsToDeal.length) return;
             let t1 = Game.cpu.getUsed();
@@ -316,6 +339,27 @@ export class Market{
             }
             _.remove(this.roomsToDeal, this.hasOrder);
         }
+    }
+
+    static postOrders() {
+        let resources = ['XGH2O'];
+        let rooms = _.filter(Game.rooms, room => room.controller && room.controller.my && room.terminal && room.terminal.my);
+        resources.forEach(resource => {
+            rooms.forEach(room => {
+                let terminal = room.terminal;
+                if(!terminal) return;
+                let store = terminal.store[resource];
+                if(store >= 9000) return;
+                let order = _.filter(Game.market.orders, order => order.resourceType == resource && order.roomName == room.name && order.type == ORDER_BUY)[0];
+                if(!order) {
+                    Game.market.createOrder({type: ORDER_BUY, resourceType: resource as any, roomName: room.name, price: 5, totalAmount: Math.max(2000, 10000 - store)});
+                    return;
+                } else {
+                    if(order.price < 5) Game.market.changeOrderPrice(order.id, 5)
+                    if(order.remainingAmount < 1000) Game.market.extendOrder(order.id, 1000);
+                }
+            })
+        })
     }
 
     static getAllOrders(filter?: OrderFilter | ((o: Order) => boolean)): Order[]{
@@ -414,6 +458,7 @@ export class Market{
     static changePrices() {
         for (const resourceType in maxMarketPrices) {
             if (maxMarketPrices.hasOwnProperty(resourceType)) {
+                if(resourceType == RESOURCE_SILICON || resourceType == RESOURCE_MIST) continue;
                 let histories = Game.market.getHistory(resourceType as any);
                 let history = histories[histories.length - 1];
                 if(history) {
@@ -425,6 +470,9 @@ export class Market{
         for (const resourceType in minMarketPrices) {
             if (minMarketPrices.hasOwnProperty(resourceType)) {
                 if(resourceType == RESOURCE_ESSENCE) continue;
+                if(resourceType == RESOURCE_ORGANISM) continue;
+                if(resourceType == RESOURCE_DEVICE) continue;
+                if(resourceType == RESOURCE_MACHINE) continue;
                 let histories = Game.market.getHistory(resourceType as any);
                 let history = histories[histories.length - 1];
                 if(history) {

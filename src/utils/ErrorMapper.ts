@@ -31,7 +31,7 @@ export class ErrorMapper {
    * @returns {string} The source-mapped stack trace
    */
   public static sourceMappedStackTrace(error: Error | string): string {
-    const stack: string = typeof error == 'string' ? error : (error.stack as string);
+    const stack: string = typeof error == 'string' ? error : (error.stack as string);if(1)return stack;
     // const stack: string = error instanceof Error ? (error.stack as string) : error;
     if (this.cache.hasOwnProperty(stack)) {
       return this.cache[stack];

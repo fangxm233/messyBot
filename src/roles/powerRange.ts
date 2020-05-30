@@ -13,7 +13,7 @@ export class RolePowerRange extends Role{
     run(){
         let room = Game.rooms[this.target];
         if(!room){
-            this.creep.travelTo(new RoomPosition(25, 25, this.target));
+            this.creep.travelTo(new RoomPosition(25, 25, this.target), {allowHostile: false});
             return;
         }
 
@@ -25,7 +25,7 @@ export class RolePowerRange extends Role{
 
         if(this.creep.hits > this.creep.hitsMax / 2){
             if(this.creep.pos.getRangeTo(powerBank) > 2){
-                this.creep.travelTo(powerBank);
+                this.creep.travelTo(powerBank, {allowHostile: false});
                 return;
             }
             this.creep.rangedAttack(powerBank);

@@ -28,6 +28,8 @@ module.exports.loop = function () {
 
 ***************************************************/
 
+import { RoomPlanner } from "../roomPlanner/RoomPlanner";
+
 const STATE_FILL = 0
 const STATE_REACTION = 1
 const STATE_RECOVERY = 2
@@ -44,20 +46,25 @@ module.exports = {
         room = Game.rooms[roomName];
         const creepName = 'laber' + roomName;
         creep = Game.creeps[creepName];
-        if(!initMemory(roomName))return;//这句是初始化用的，如果目标房间已经运行稳定了，就可以把这句删掉
+        if(!initMemory(roomName)) return;//这句是初始化用的，如果目标房间已经运行稳定了，就可以把这句删掉
         if(!need_type || !need_amount){
-            console.log('ERROR: What do you want Room '+roomName+' do?')
+            console.log(`ERROR: What do you want Room ${roomName} do?`)
             return;
         }
         var state = Memory.lab[roomName].state;
         labs = new Array();
         var _id = 0;
         
-        Memory.lab[roomName]['labs'].forEach(labid => {
-            labs.push(Game.getObjectById(labid))
-            new RoomVisual(roomName).text(_id,labs[_id].pos,{color: 'white', font: 0.5})//如不需要绘制编号，这句也可以删了
-            _id++;
-        });
+        let rp = new RoomPlanner(roomName);
+        let sourceLabs = rp.getMineralLabs();
+        if(sourceLabs.length < 2) return;
+        labs.push(...sourceLabs);
+        labs.push(...rp.getProductLabs());
+        // Memory.lab[roomName]['labs'].forEach(labid => {
+        //     labs.push(Game.getObjectById(labid))
+        //     new RoomVisual(roomName).text(_id,labs[_id].pos,{color: 'white', font: 0.5})//如不需要绘制编号，这句也可以删了
+        //     _id++;
+        // });
         
         needs = new Array();
         //needs.push([need_type,need_amount]);
@@ -169,28 +176,30 @@ function initMemory(roomName){
     if(Memory.lab[roomName].state === undefined){
         Memory.lab[roomName].state = STATE_REACTION
     }
-    if(!Memory.lab[roomName].labs || Game.time % 3 == 0){
-        var labs = room.find(FIND_STRUCTURES,{filter:o=>(o.structureType == STRUCTURE_LAB)})
-        labs.forEach(lab => {
-            lab.value = 0;
-            labs.forEach(l => {
-                if(lab.pos.inRangeTo(l,2)){
-                    lab.value ++;
-                }
-            });
-        });
-        labs.sort((a,b)=>(b.value - a.value));
-        for(var i = 0;i<labs.length;i++){
-            labs[i] = labs[i].id;
-        }
-        Memory.lab[roomName].labs = labs;
-    }
-    if(Memory.lab[roomName].labs.length >= 3){
-        return true;
-    }else{
-        console.log('ERROR: Room '+roomName+' must have more than 3 labs');
-        return false;
-    }
+    if(Memory.lab[roomName].labs) delete Memory.lab[roomName].labs;
+    return true;
+    // if(!Memory.lab[roomName].labs || Game.time % 3 == 0){
+    //     var labs = room.find(FIND_STRUCTURES,{filter:o=>(o.structureType == STRUCTURE_LAB)})
+    //     labs.forEach(lab => {
+    //         lab.value = 0;
+    //         labs.forEach(l => {
+    //             if(lab.pos.inRangeTo(l,2)){
+    //                 lab.value ++;
+    //             }
+    //         });
+    //     });
+    //     labs.sort((a,b)=>(b.value - a.value));
+    //     for(var i = 0;i<labs.length;i++){
+    //         labs[i] = labs[i].id;
+    //     }
+    //     Memory.lab[roomName].labs = labs;
+    // }
+    // if(Memory.lab[roomName].labs.length >= 3){
+    //     return true;
+    // }else{
+    //     console.log('ERROR: Room '+roomName+' must have more than 3 labs');
+    //     return false;
+    // }
 }
 
 function findMaterial(product){

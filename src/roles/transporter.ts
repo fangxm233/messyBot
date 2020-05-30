@@ -58,12 +58,12 @@ export class RoleTransporter extends Role {
             }else if(container && container.store.energy >= remain) this.creep.withdraw(container, RESOURCE_ENERGY);
         }
         else {
-            if(this.creep.room.name != this.creep.memory.spawnRoom){
-                let targets = _.filter(Game.rooms[this.creep.room.name].roads, 
-                    structure => structure.hits < structure.hitsMax && structure.pos.getRangeTo(this.creep.pos) <= 3);
-                let target = _.min(targets, target => target.hits);
-                if(target) this.creep.repair(target);    
-            }
+            // if(this.creep.room.name != this.creep.memory.spawnRoom){
+            //     let targets = _.filter(this.creep.room.roads, 
+            //         structure => structure.hits < structure.hitsMax && structure.pos.getRangeTo(this.creep.pos) <= 3);
+            //     let target = _.min(targets, target => target.hits);
+            //     if(target) this.creep.repair(target);    
+            // }
             let storage = Game.getObjectById<StructureStorage>(Memory.rooms[this.creep.memory.spawnRoom].storage);
             if(storage){
                 if (this.creep.transfer(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {

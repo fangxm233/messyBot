@@ -56,9 +56,9 @@ export class Statistics {
     static recordCreditChange(){
         if(!Memory.avgCredit) Memory.avgCredit = 0;
         if(!Memory.lastCredit) Memory.lastCredit = Game.market.credits;
-        Memory.changeCredits = Game.market.credits - (Memory.lastTickCredits || Game.market.credits);
-        if(Memory.changeCredits) Memory.lastChangeCredits = Memory.lastTickCredits;
-        Memory.lastTickCredits = Game.market.credits;
+        // Memory.changeCredits = Game.market.credits - (Memory.lastTickCredits || Game.market.credits);
+        // if(Memory.changeCredits) Memory.lastChangeCredits = Memory.lastTickCredits;
+        // Memory.lastTickCredits = Game.market.credits;
         Visualizer.infoBox('Market', ['profit: ' + Memory.avgCredit.toFixed(2)], { x: 9, y: 1}, 6.5);
         let day = new Date().getDate();
         if(day != Memory.day){

@@ -14,7 +14,7 @@ export class RolePowerHealer extends Role{
         let room = Game.rooms[this.target];
 
         if(!room){
-            this.creep.travelTo(new RoomPosition(25, 25, this.target));
+            this.creep.travelTo(new RoomPosition(25, 25, this.target), {allowHostile: false});
             return;
         }
 
@@ -25,7 +25,7 @@ export class RolePowerHealer extends Role{
 
         if(!attackCreep){
             if(powerBank && this.creep.pos.getRangeTo(powerBank) > 3){
-                this.creep.travelTo(powerBank);
+                this.creep.travelTo(powerBank, {allowHostile: false});
                 return;
             }
             if(!powerBank) {
@@ -42,7 +42,7 @@ export class RolePowerHealer extends Role{
                 }
                 return;
             }
-            if(this.creep.pos.getRangeTo(attackCreep) > 1) this.creep.travelTo(attackCreep, { pushCreep: false, movingTarget: true });
+            if(this.creep.pos.getRangeTo(attackCreep) > 1) this.creep.travelTo(attackCreep, { pushCreep: false, movingTarget: true, allowHostile: false });
             if(powerBank) this.creep.heal(attackCreep);
         }
     }

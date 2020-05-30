@@ -167,18 +167,18 @@ export function hitsOnTough(body: BodyPartDefinition[], damage: number): number{
         if(!part.hits) continue;
         if(damageRemain <= 0) return hits;
         if(part.type == 'tough' && part.boost) {
-            if(damageRemain * BOOSTS.tough[part.boost].damage > 100) {
-                hits += 100;
-                damageRemain -= 100 / BOOSTS.tough[part.boost].damage;
+            if(damageRemain * BOOSTS.tough[part.boost].damage > part.hits) {
+                hits += part.hits;
+                damageRemain -= part.hits / BOOSTS.tough[part.boost].damage;
             } else {
                 hits += damageRemain * BOOSTS.tough[part.boost].damage;
                 damageRemain = 0;
             }
             continue;
         }
-        if(damageRemain > 100) {
-            hits += 100;
-            damageRemain -= 100;
+        if(damageRemain > part.hits) {
+            hits += part.hits;
+            damageRemain -= part.hits;
         } else {
             hits += damageRemain;
             return hits;

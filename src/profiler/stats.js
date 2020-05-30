@@ -1,4 +1,5 @@
 import { USER_NAME, USE_ACTION_COUNTER } from "../config"
+import { Process } from "../process/process"
 
 // import config from '/etc/stats'
 // import { Logger } from '/log'
@@ -128,7 +129,6 @@ export class InfluxDB {
     })
     this.addStat('market', {}, {
       credits: Game.market.credits,
-      LastChange: Memory.lastChangeCredits
     })
     _.each(Game.rooms, room => {
       const { controller, storage, terminal } = room
@@ -162,6 +162,11 @@ export class InfluxDB {
         this.addStat('terminal', {
           room: room.name
         }, terminal.store)
+      }
+      if(Process.processes[room.name]) {
+        this.addStat('processes', {
+          room: room.name
+        }, _.countBy(_.filter(Process.processes[room.name], process => !!process), process => process.processName));
       }
     })
     if (typeof Game.cpu.getHeapStatistics === 'function') {
@@ -210,7 +215,7 @@ export class InfluxDB {
   formatGraphite (stat) {
     const { name, tags, values } = stat
     if (!this.prefix) {
-      this.prefix = `${this.shard}` // .${this.shard}`
+      this.prefix = `${USER_NAME}.${this.shard}` // .${this.shard}`
     }
     const pre = [this.prefix, this.kv(tags, '.').join('.'), name].filter(v => v).join('.')
     return this.kv(values, ' ').map(v => `${pre}.${v}\n`).join('')

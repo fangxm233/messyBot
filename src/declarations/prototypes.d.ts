@@ -3,6 +3,7 @@ interface Game{
 		getAllRaw(product: CommodityConstant, count: number, endLevel: number): { [type in CommoditiesRaw]: number };
 		produce(product: CommodityConstant, amount: number, roomName: string);
 		calIndustryProfit(log: boolean);
+		neededAmount(type: CommodityConstant, roomName: string);
 	}
 }
 

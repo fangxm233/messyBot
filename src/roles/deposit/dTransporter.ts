@@ -20,15 +20,15 @@ export class RoleDTransporter extends Role{
 
             let resource = this.creep.room.find(FIND_DROPPED_RESOURCES).filter(resource => resource.resourceType == this.type)[0];
             if(resource && this.creep.store.getFreeCapacity()) {
-                if(!this.creep.pos.isNearTo(resource)) this.creep.travelTo(resource, {preferHighway: true});
+                if(!this.creep.pos.isNearTo(resource)) this.creep.travelTo(resource, {allowHostile: false});
                 this.creep.pickup(resource);
                 return;
             }
 
             if(this.creep.room.name != this.targetName){
                 let room = Game.rooms[this.targetName];
-                if(room) this.creep.travelTo(room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0], {preferHighway: true});
-                else this.creep.travelTo(new RoomPosition(25, 25, this.targetName));
+                if(room) this.creep.travelTo(room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0], {allowHostile: false});
+                else this.creep.travelTo(new RoomPosition(25, 25, this.targetName), {allowHostile: false});
                 if(!this.creep.memory.dis && this.creep.memory._trav.path) this.creep.memory.dis = this.creep.memory._trav.path.length;
                 return;
             }
@@ -38,7 +38,7 @@ export class RoleDTransporter extends Role{
             let deposit = this.creep.room.find(FIND_DEPOSITS, {filter: deposit => deposit.lastCooldown < 101})[0];
             if(!deposit) return;
             
-            if(!this.creep.pos.isNearTo(containerCreep)) this.creep.travelTo(containerCreep, {preferHighway: true});
+            if(!this.creep.pos.isNearTo(containerCreep)) this.creep.travelTo(containerCreep, {allowHostile: false});
             if(containerCreep.store.getUsedCapacity(deposit.depositType) >= 
                 ((this.closing || this.creep.ticksToLive < this.creep.memory.dis + 80) ? 0 : this.creep.store.getFreeCapacity())) 
                     containerCreep.transfer(this.creep, deposit.depositType);
@@ -47,11 +47,11 @@ export class RoleDTransporter extends Role{
             if(!terminal) return;
             let resource = this.creep.room.find(FIND_DROPPED_RESOURCES).filter(resource => resource.resourceType == this.type)[0];
             if(resource && this.creep.store.getFreeCapacity()) {
-                if(!this.creep.pos.isNearTo(resource)) this.creep.travelTo(resource);
+                if(!this.creep.pos.isNearTo(resource)) this.creep.travelTo(resource, {allowHostile: false});
                 this.creep.pickup(resource);
                 return;
             }    
-            if(!this.creep.pos.isNearTo(terminal)) this.creep.travelTo(terminal, { preferHighway: true });
+            if(!this.creep.pos.isNearTo(terminal)) this.creep.travelTo(terminal, {allowHostile: false});
             else this.creep.transfer(terminal, this.type);
         }
     }
