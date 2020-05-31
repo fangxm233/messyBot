@@ -238,8 +238,8 @@ export class CreepManager {
         }
         if (storage && storage.store.energy < 50000) numUpgraders = 0;
         // if(controller.level == 8 && storage) if(storage.store.energy > 600000) numUpgraders = 1; else numUpgraders = 0;
-        // if(controller.level == 8 && controller.ticksToDowngrade > 110000) numUpgraders = 0;
-        if (controller.level == 8 && controller.ticksToDowngrade < 110000) numUpgraders = 1;
+        if (controller.level == 8 && controller.ticksToDowngrade > 110000) numUpgraders = 0;
+        // if (controller.level == 8 && controller.ticksToDowngrade < 110000) numUpgraders = 1;
         if (wishCreepRole == 'upgrader' || creeps['upgrader'] < numUpgraders) {
             this.spawnInfo = undefined;
             let budget = capEnergy;
