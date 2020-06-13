@@ -40,6 +40,7 @@ import { ProcessAttack } from './process/instances/attack';
 import { repeater } from './logistics/Repeater';
 import { RolePioneer } from './roles/pioneer';
 import { RoleHauler } from './roles/hauler';
+import { sandBox } from './sandBox';
 
 export const loop = ErrorMapper.wrapLoop(() => {
     // if(Game.cpu.limit == 0) {
@@ -49,6 +50,64 @@ export const loop = ErrorMapper.wrapLoop(() => {
     stats.reset();
     let same = tryInitSameMemory();
     if (USE_ACTION_COUNTER) actionsCounter.init(true);
+
+    // let creep = Game.creeps.sad;
+    // if(creep) {
+    //     // if(new RoleHauler(creep).isBoosted() && creep.store.energy && creep.room.name != 'W9S23')
+    //         new RolePioneer(creep).run();
+    //     // else new RoleHauler(creep).run();
+    // }
+    // if(Game.shard.name == 'shard2') {
+    //     tinyMain(false);
+    //     return;
+    // }
+
+    // if(Game.shard.name == 'shard3') {
+    //     for (const name in Game.creeps) {
+    //         // const creep = Game.creeps[name];
+    //         if(name[0] == '_' && Game.creeps[name].pos.roomCoords.y > 10) {
+    //             if(!Memory.creeps[name]) Memory.creeps[name] = {role: name.split('_')[1], healerName: []} as any;
+    //             let process = Process.getProcess('W12N9', 'attack') as ProcessAttack;
+    //             if(process && process.creeps.findIndex(c => c == name) == -1) {
+    //                 process.registerCreep(name);
+    //                 process.boostFlag[name] = 'boosted';
+    //                 process.memory.boostFlag[name] = 'boosted';
+    //             }
+    //         }
+    //     }
+    // }
+
+    // let path = [
+    //     {shard: 'shard3', roomName: 'W10N10', x: 18, y: 8},
+    //     {shard: 'shard2', roomName: 'W10N10', x: 9, y: 40},
+    //     {shard: 'shard1', roomName: 'W10N10', x: 22, y: 26},
+    //     {shard: 'shard0', roomName: 'W20N11', x: 15, y: 48},
+    //     {shard: 'shard0', roomName: 'W31N10', x: 48, y: 47},
+    //     {shard: 'shard0', roomName: 'W29S0', x: 1, y: 38},
+    //     {shard: 'shard0', roomName: 'W30S29', x: 46, y: 47},
+    //     {shard: 'shard0', roomName: 'W20S30', x: 37, y: 30},
+    //     {shard: 'shard1', roomName: 'W10S20', x: 37, y: 32},
+    //     {shard: 'shard2', roomName: 'W10S20', x: 33, y: 38}
+    // ]
+    // let des = {shard: 'shard3', roomName: 'W10S20'};
+    // for (const name in Game.creeps) {
+    //     const creep = Game.creeps[name];
+    //     if(name[0] == '_' && !(creep.memory as any).arrived && !!creep.body[0].boost) {
+    //         console.log(name, creep.pos)
+    //         let code = Traveler.interShardTravel(creep, path, des);
+    //         if(code == true) {
+    //             (creep.memory as any).arrived = 1;
+    //         }
+    //     }
+    // }
+
+    // if(Game.creeps.a) {
+    //     const creep = Game.creeps.a;
+    //     const target = creep.room.find(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_INVADER_CORE})[0];
+    //     if(target) creep.attack(target);
+    //     // creep.travelTo(new RoomPosition(5,29,'W46S3'));
+
+    // }
 
     if (reset) globalReset();
     let t1 = Game.cpu.getUsed();
@@ -148,8 +207,32 @@ export const loop = ErrorMapper.wrapLoop(() => {
             || role == 'miner' || role == 'pioneer') run = true;
         if (role == 'transporter' && !creep.memory.target) run = true;
         if (!run) continue;
+        // if(creep.memory.role == 'powerAttack' || creep.memory.role == 'powerHealer' || creep.memory.role == 'filler' || creep.memory.role == 'powerRange'
+        //     || creep.memory.role == 'dHarvester' || creep.memory.role == 'dTransporter' || creep.memory.role == 'container' || creep.memory.role == 'defencer'
+        //     || creep.memory.role == 'repairer' || creep.memory.role == 'rCarrier' || creep.memory.role == 'melee' || creep.memory.role == 'healer'
+        //     || creep.memory.role == 'warrior' || creep.memory.role == 'destroyer') continue;
+        // if(creep.memory.role == 'transporter' && creep.memory.target) continue;
         try {
+            // if(!s[creep.memory.role]) s[creep.memory.role] = { cpu: 0, num: 0};
             var creepRole = RoleFactory.getRole(creep);
+            // if(role && creep.room.memory.underAttacking){
+            //     if(!creep.room.controller) {creep.suicide(); continue; }
+            //     if(!creep.room.controller.my) {creep.suicide(); continue; }
+            //     if(!creep.room.towers.length){
+            //         let enemies = creep.room.find(FIND_HOSTILE_CREEPS);
+            //         if(enemies.length){
+            //             let longest = 0;
+            //             for (const enemy of enemies) {
+            //                 if(enemy.ticksToLive && enemy.ticksToLive > longest) longest = enemy.ticksToLive;
+            //             }
+            //             Memory.rooms[creep.pos.roomName].underAttacking = true;
+            //             Memory.rooms[creep.pos.roomName].timeLeft = longest;
+            //             creep.suicide();
+            //             continue;
+            //         }
+            //         else creep.room.memory.underAttacking = false;
+            //     }
+            // }
             if (creepRole) creepRole.run();
         } catch (error) {
             if (!error.stack)
@@ -201,9 +284,25 @@ export const loop = ErrorMapper.wrapLoop(() => {
     Alloter.checkDirty();
     repeater.repeatActions();
     Processes.showHud();
+    // for (const k in Game.rooms) {
+    //     if (!Game.rooms.hasOwnProperty(k)) continue;
+    //     // console.log(k);
+    //     const room = Game.rooms[k];
+    //     if(!room.controller) continue;
+    //     if(!room.controller.my) continue;
 
+    //     // Statistics.run(room);
+    //     // Visualizer.infoBox('cost', [['E49N22', Memory.statistics['E49N22'].averageParseCost.toFixed(3)],
+    //     //     ['E51N21', Memory.statistics['E51N21'].averageParseCost.toFixed(3)]], {x: 1, y:7, roomName: k}, 10);
+    // }
+    // Processes.showHud();
+
+    // if(USE_ACTION_COUNTER) console.log(actionsCounter.output());
     if (Game.time % 3 == 1) stats.commit();
     if (USE_ACTION_COUNTER) actionsCounter.save(1500);
+    // if(USE_ACTION_COUNTER)
+    //     console.log('end', (Game.cpu as any)._getUsed().toFixed(3), 'excute percentage',
+    //         (1 - actionsCounter.getData().totalCPU / (Game.cpu as any)._getUsed()).toFixed(3));
 
     Game.industry = { getAllRaw: Industry.getAllRaw, produce: (a1, a2, a3) => Industry.produce(a1, a2, a3), calIndustryProfit: (log) => Industry.calIndustryProfit(log), neededAmount: (a1, a2) => Industry.neededAmount(a1, a2) };
     global['GC'] = GC;
@@ -212,7 +311,80 @@ export const loop = ErrorMapper.wrapLoop(() => {
     (Game as any).printProcessesType = () => console.log(JSON.stringify(Process.process_Type, undefined, 4));
     (Game as any).printProcessesId = () => console.log(JSON.stringify(Process.processes_ID, undefined, 4));
     (global as any).displayTower = (mainRoomName, observeRoomName) => towerEstimate.run(mainRoomName, observeRoomName)
+    // if(ProcessActiveDefend.costMatrixs['E5S1']) Visualizer.displayCostMatrix(ProcessActiveDefend.costMatrixs['E5S1'], 'E5S1', false)
+    // let matrix = ProcessAttack.getHitsMatrix('E5S1');
+    // if(matrix) Visualizer.displayCostMatrix(matrix);
+
+    // if(Game.cpu.bucket < 10) while(true){}
 });
+
+function tinyMain(recordStat: boolean = true) {
+    if (recordStat) stats.reset();
+    let same = tryInitSameMemory();
+    if (USE_ACTION_COUNTER) actionsCounter.init(true);
+
+    if (reset) globalReset();
+    CreepManager.clearUnexistingCreep();//if(1)return
+    rebuildMemory(same && !reset);
+
+    // for (const name in Game.creeps) {
+    //     // const creep = Game.creeps[name];
+    //     if(name[0] == '_') {
+    //         if(!Memory.creeps[name]) Memory.creeps[name] = {role: name.split('_')[1], healerName: []} as any;
+    //         let process = Process.getProcess('E53N21', 'attack', 'targetRoom', 'E55N21') as ProcessAttack;
+    //         if(process && process.creeps.findIndex(c => c == name) == -1) {
+    //             process.registerCreep(name);
+    //             process.boostFlag[name] = 'boosted';
+    //             process.memory.boostFlag[name] = 'boosted';
+    //         }
+    //     }
+    // }
+
+    // Command.run();
+    for (const roomName in Game.rooms) {
+        const room = Game.rooms[roomName];
+        let controller = room.controller;
+        if (!controller) continue;
+        if (!controller.my) continue;
+        if (room.memory) room.memory.isClaimed = true;
+        Tower.run(room);
+    }
+    // Process.runAllProcesses();
+
+    for (const name in Game.creeps) {
+        const creep = Game.creeps[name];
+        if (creep.memory.role == 'powerAttack' || creep.memory.role == 'powerHealer' || creep.memory.role == 'filler' || creep.memory.role == 'powerRange'
+            || creep.memory.role == 'dHarvester' || creep.memory.role == 'dTransporter' || creep.memory.role == 'container' || creep.memory.role == 'defencer'
+            || creep.memory.role == 'repairer' || creep.memory.role == 'rCarrier' || creep.memory.role == 'melee' || creep.memory.role == 'healer'
+            || creep.memory.role == 'warrior' || creep.memory.role == 'destroyer') continue;
+        try {
+            var role = RoleFactory.getRole(creep);
+            if (role) role.run();
+        } catch (error) {
+            if (!error.stack)
+                throw error;
+            console.log(`<span style='color:red'>${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
+        }
+    }
+
+    repeater.repeatActions();
+    if (recordStat && Game.time % 3 == 1) stats.commit();
+    if (USE_ACTION_COUNTER) actionsCounter.save(1500);
+
+    Game.industry = { getAllRaw: Industry.getAllRaw, produce: (a1, a2, a3) => Industry.produce(a1, a2, a3), calIndustryProfit: (log) => Industry.calIndustryProfit(log), neededAmount: (a1, a2) => Industry.neededAmount(a1, a2) };
+    global['GC'] = GC;
+    (Game as any).reset = () => Processes.rebuildProcesses();
+    (Game as any).printProcesses = () => console.log(JSON.stringify(Process.processes, undefined, 4));
+    (Game as any).printProcessesType = () => console.log(JSON.stringify(Process.process_Type, undefined, 4));
+    (Game as any).printProcessesId = () => console.log(JSON.stringify(Process.processes_ID, undefined, 4));
+    (global as any).displayTower = (mainRoomName, observeRoomName) => towerEstimate.run(mainRoomName, observeRoomName);
+
+    try {
+        sandBox();
+    } catch (error) {
+        console.log(`<span style='color:red'> Error in sandBox:\n${_.escape(ErrorMapper.sourceMappedStackTrace(error))}</span>`);
+    }
+}
 
 function globalReset() {
     console.log('global reset');
@@ -226,6 +398,13 @@ function globalReset() {
         }
     }
     Market.changePrices();
+
+    // for (const roomName in Memory.rooms) {
+    //     if (Memory.rooms.hasOwnProperty(roomName)) {
+    //         const room = Memory.rooms[roomName];
+    //         if(!room.allot && !room.isClaimed) delete Memory.rooms[roomName];
+    //     }
+    // }
 }
 
 function rebuildMemory(same: boolean) {
@@ -242,6 +421,45 @@ function rebuildMemory(same: boolean) {
 
     // if(!same)
     // rebuildRoomPositions();
+}
+
+function rebuildRoomPositions() {
+    // for (const roomName in Memory.rooms) {
+    //     const room = Memory.rooms[roomName];
+    //     for (const typeIndex in room.allot) {
+    //         const type = room.allot[typeIndex];
+    //         for (const unit of type) {
+    //             if(unit && unit.data && unit.data.pos) unit.data.pos = refreshRoomPosition(unit.data.pos);
+    //         }
+    //     }
+    // }
+    // for (const roomName in Memory.stableData) {
+    //     if (Memory.stableData.hasOwnProperty(roomName)) {
+    //         const mem = Memory.stableData[roomName];
+    //         if(mem.harvesterPosition){
+    //             for (const key in mem.harvesterPosition) {
+    //                 const pos = mem.harvesterPosition[key];
+    //                 mem.harvesterPosition[key] = refreshRoomPosition(pos);
+    //             }
+    //         }
+    //         if(mem.linkPosition){
+    //             for (const key in mem.linkPosition) {
+    //                 const pos = mem.linkPosition[key];
+    //                 mem.linkPosition[key] = refreshRoomPosition(pos);
+    //             }
+    //         }
+    //         if(mem.containerPosition){
+    //             for (const key in mem.containerPosition) {
+    //                 const pos = mem.containerPosition[key];
+    //                 mem.containerPosition[key] = refreshRoomPosition(pos);
+    //             }
+    //         }
+    //     }
+    // }
+    // for (const name in Memory.creeps) {
+    //     let memory = Game.creeps[name].memory;
+    //     if(memory.allotUnit && memory.allotUnit.data && memory.allotUnit.data.pos) memory.allotUnit.data.pos = refreshRoomPosition(memory.allotUnit.data.pos);
+    // }
 }
 
 function GC() {
@@ -306,3 +524,32 @@ function tryInitSameMemory(): boolean {
         return false;
     }
 }
+
+/*
+    if(Game.shard.name == 'shard3') {
+        let PIONEER = Game.creeps['PIONEER'];
+        if(PIONEER) {
+            PIONEER.travelTo(new RoomPosition(13, 15, 'E50N20'))
+        }
+    }
+    if(Game.shard.name == 'shard2') {
+        let PIONEER = Game.creeps['PIONEER'];
+        if(PIONEER) {
+            if(Game.cpu.bucket <= 2) return;
+            PIONEER.travelTo(new RoomPosition(26, 7, 'E55N21'));
+            let c = Game.getObjectById<StructureController>('59f1a6b482100e1594f406e8');
+            if(c && PIONEER.pos.inRangeTo(c, 1)) {
+                PIONEER.claimController(c);
+                PIONEER.signController(c, '🙃');
+                // PIONEER.suicide();
+                return;
+            }
+            return;
+        }
+    }
+    if(Game.shard.name != 'shard3' && Game.shard.name != 'shard0') {
+        _.forEach(Game.creeps, creep => creep.suicide());
+        return;
+    }
+
+*/
