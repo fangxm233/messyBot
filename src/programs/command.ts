@@ -56,8 +56,8 @@ const briefName = {
 }
 
 @profile
-export class Command{
-    static run(){
+export class Command {
+    static run() {
         let hasPoorFlag = false;
         let hasDismantleFlag = false;
         let hasHaulFlag = false;
@@ -65,108 +65,108 @@ export class Command{
         for (const flagName in Game.flags) {
             if (Game.flags.hasOwnProperty(flagName)) {
                 const flag = Game.flags[flagName];
-                if(flag.name == 'dismantle') {
+                if (flag.name == 'dismantle') {
                     hasDismantleFlag = true;
                     let smallestName, smallestRange = 999;
                     for (const spawnName in Game.spawns) {
                         const spawn = Game.spawns[spawnName];
-                        if(spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange && spawn.isActive()){
+                        if (spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange && spawn.isActive()) {
                             smallestName = spawn.room.name;
                             smallestRange = spawn.pos.getSqrtRoomRangeTo(flag.pos);
                         }
                     }
                     Memory.dismantlerRoom = smallestName;
                 }
-                if(flag.name == 'haul'){
+                if (flag.name == 'haul') {
                     hasHaulFlag = true;
                     let smallestName, smallestRange = 999;
                     for (const spawnName in Game.spawns) {
                         const spawn = Game.spawns[spawnName];
-                        if(spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange){
+                        if (spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange) {
                             smallestName = spawn.room.name;
                             smallestRange = spawn.pos.getSqrtRoomRangeTo(flag.pos);
                         }
                     }
                     Memory.haulerRoom = smallestName;
                 }
-                if(flag.name.match('colony')){
+                if (flag.name.match('colony')) {
                     let roomName = flag.name.split('_')[1];
                     let targetName = flag.pos.roomName;
-                    if(Memory.colonies[roomName]) {
+                    if (Memory.colonies[roomName]) {
                         let isExist = false;
                         for (const c of Memory.colonies[roomName]) {
-                            if(c.name == targetName) isExist = true;
+                            if (c.name == targetName) isExist = true;
                         }
-                        if(!isExist) Memory.colonies[roomName].push({name: targetName, controller: '', enable: true });
+                        if (!isExist) Memory.colonies[roomName].push({ name: targetName, controller: '', enable: true });
                     }
                 }
-                if(flag.name.match('uncolony')){
+                if (flag.name.match('uncolony')) {
                     let roomName = flag.name.split('_')[1];
                     let targetName = flag.pos.roomName;
-                    if(Memory.colonies[roomName]) {
+                    if (Memory.colonies[roomName]) {
                         _.remove(Memory.colonies[roomName], c => c.name == targetName);
-                        if(Memory.stableData[targetName]) delete Memory.stableData[targetName];
+                        if (Memory.stableData[targetName]) delete Memory.stableData[targetName];
                         delete Memory.rooms[targetName];
                     }
                     flag.remove();
                     continue;
                 }
-                if(flag.name == 'poor'){
+                if (flag.name == 'poor') {
                     Memory.poorRoom = flag.pos.roomName;
                     hasPoorFlag = true;
                     continue;
                 }
-                if(flag.name == 'spawn'){
+                if (flag.name == 'spawn') {
                     Memory.spawnRoom = flag.pos.roomName;
                     hasSpawn = true;
                     let smallestName, smallestRange = 999;
                     for (const spawnName in Game.spawns) {
                         const spawn = Game.spawns[spawnName];
                         // if(!spawn.room.storage) continue;
-                        if(spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange && spawn.isActive()){
+                        if (spawn.pos.getSqrtRoomRangeTo(flag.pos) < smallestRange && spawn.isActive()) {
                             smallestName = spawn.room.name;
                             smallestRange = spawn.pos.getSqrtRoomRangeTo(flag.pos);
                         }
                     }
-                    Memory.expandRoom = 'W46S3';
+                    Memory.expandRoom = smallestName;
 
-                    if(!Memory.stableData[flag.pos.roomName]) Memory.stableData[flag.pos.roomName] = {} as any;
+                    if (!Memory.stableData[flag.pos.roomName]) Memory.stableData[flag.pos.roomName] = {} as any;
                     Memory.stableData[flag.pos.roomName].basePosition = {
                         x: flag.pos.x,
                         y: flag.pos.y,
                     };
                     continue;
                 }
-                if(flag.name.match('enable')){
+                if (flag.name.match('enable')) {
                     let enable = flag.name.split('_')[2] == 'true';
                     let roomName = flag.name.split('_')[1];
-                    if(Memory.colonies[roomName]){
+                    if (Memory.colonies[roomName]) {
                         for (const c of Memory.colonies[roomName]) {
-                            if(c.name == flag.pos.roomName) c.enable = enable;
+                            if (c.name == flag.pos.roomName) c.enable = enable;
                         }
                     }
                     continue;
                 }
-                if(flag.name.match('ar') || flag.name.match('ad')) {
+                if (flag.name.match('ar') || flag.name.match('ad')) {
                     let roomName = flag.name.split('_')[0];
-                    if(!Process.getProcess(roomName, 'attack', 'targetRoom', flag.pos.roomName)) Processes.processAttack(roomName, flag.pos.roomName);
+                    if (!Process.getProcess(roomName, 'attack', 'targetRoom', flag.pos.roomName)) Processes.processAttack(roomName, flag.pos.roomName);
                     continue;
                 }
-                if(flag.name.match('ac')) {
+                if (flag.name.match('ac')) {
                     let roomName = flag.name.split('_')[0];
                     let creepNum = Number.parseInt(flag.name.split('_')[2]);
-                    if(!Process.getProcess(roomName, 'attackController', 'targetRoom', flag.pos.roomName)) Processes.processAttackController(roomName, flag.pos.roomName, creepNum);
+                    if (!Process.getProcess(roomName, 'attackController', 'targetRoom', flag.pos.roomName)) Processes.processAttackController(roomName, flag.pos.roomName, creepNum);
                     continue;
                 }
-                if(flag.name.match('sh4')) {
+                if (flag.name.match('sh4')) {
                     let roomName = flag.name.split('_')[0];
-                    if(!Process.getProcess(roomName, 'stronghold4', 'targetRoom', flag.pos.roomName)) Processes.processStrongHold4(roomName, flag.pos.roomName);
+                    if (!Process.getProcess(roomName, 'stronghold4', 'targetRoom', flag.pos.roomName)) Processes.processStrongHold4(roomName, flag.pos.roomName);
                     continue;
                 }
-                if(!flag.room) continue;
+                if (!flag.room) continue;
                 let room = flag.room;
-                if(flag.name.match('base')){
-                    if(!Memory.stableData[room.name]) Memory.stableData[room.name] = {} as any;
+                if (flag.name.match('base')) {
+                    if (!Memory.stableData[room.name]) Memory.stableData[room.name] = {} as any;
                     Memory.stableData[room.name].basePosition = {
                         x: flag.pos.x,
                         y: flag.pos.y,
@@ -192,7 +192,7 @@ export class Command{
                 //     Memory.rooms[flag.room.name].stableTransporterPos = flag.pos;
                 //     continue;
                 // }
-                if(flag.name == 'unclaim'){
+                if (flag.name == 'unclaim') {
                     let roomName = flag.pos.roomName;
                     delete Memory.rooms[room.name];
                     delete Memory.market[room.name];
@@ -209,48 +209,48 @@ export class Command{
 
                     for (const flagName in Game.flags) {
                         const flag = Game.flags[flagName];
-                        if(flag.pos.roomName == room.name) flag.remove();
+                        if (flag.pos.roomName == room.name) flag.remove();
                     }
                     room.structures.forEach(s => s.structureType != STRUCTURE_TERMINAL && s.destroy());
                     room.find(FIND_CONSTRUCTION_SITES).forEach(s => s.remove());
                     for (const name in Game.creeps) {
                         const creep = Game.creeps[name];
-                        if(creep.memory.spawnRoom == roomName) creep.suicide();
+                        if (creep.memory.spawnRoom == roomName) creep.suicide();
                     }
-                    if(room.controller) room.controller.unclaim();
+                    if (room.controller) room.controller.unclaim();
                     continue;
                 }
             }
         }
-        if(!hasPoorFlag) delete Memory.poorRoom;
-        if(!hasSpawn) {
+        if (!hasPoorFlag) delete Memory.poorRoom;
+        if (!hasSpawn) {
             delete Memory.spawnRoom;
             delete Memory.expandRoom;
             Memory.claimed = false;
         }
-        if(!hasDismantleFlag) {
+        if (!hasDismantleFlag) {
             Memory.gotoDismantle = true;
             delete Memory.dismantlerRoom;
         }
-        if(!hasHaulFlag){
+        if (!hasHaulFlag) {
             Memory.gotoHaul = true;
             delete Memory.haulerRoom;
         }
     }
 
-    static sellOrder(resourceType: ResourceConstant, amount: number, roomName: string, price?: number): string{
+    static sellOrder(resourceType: ResourceConstant, amount: number, roomName: string, price?: number): string {
         return Command.order(resourceType, amount, roomName, ORDER_SELL, price);
     }
 
-    static buyOrder(resourceType: ResourceConstant, amount: number, roomName: string, price?: number): string{
+    static buyOrder(resourceType: ResourceConstant, amount: number, roomName: string, price?: number): string {
         return Command.order(resourceType, amount, roomName, ORDER_BUY, price);
     }
 
-    static order(resourceType: ResourceConstant, amount: number, roomName: string, type: ORDER_BUY | ORDER_SELL, price?: number): string{
+    static order(resourceType: ResourceConstant, amount: number, roomName: string, type: ORDER_BUY | ORDER_SELL, price?: number): string {
         price = price ? price : (Market.getMarketPrice(resourceType) + (type == ORDER_BUY ? 0.005 : -0.005));
-        if(price > 1) console.log(`单子价格:${price}!`);
-        const code = Game.market.createOrder({type: type, totalAmount: amount, roomName: roomName, resourceType: resourceType, price: price})
-        if(code === OK) return `成功在房间${roomName}挂${type == ORDER_BUY ? '购买' : '销售'}单子,资源:${resourceType},价格:${price},数量:${amount}`;
+        if (price > 1) console.log(`单子价格:${price}!`);
+        const code = Game.market.createOrder({ type: type, totalAmount: amount, roomName: roomName, resourceType: resourceType, price: price })
+        if (code === OK) return `成功在房间${roomName}挂${type == ORDER_BUY ? '购买' : '销售'}单子,资源:${resourceType},价格:${price},数量:${amount}`;
         else return `在房间${roomName}挂${type == ORDER_BUY ? '购买' : '销售'}单子,资源:${resourceType},价格:${price},数量:${amount}失败,返回值:${errCode2description[code]}`;
     }
 
@@ -258,12 +258,12 @@ export class Command{
         for (const roomName in Game.rooms) {
             const room = Game.rooms[roomName];
             const controller = room.controller;
-            if(!controller || !controller.my || !room.terminal) continue;
-            if(roomName == des) continue;
+            if (!controller || !controller.my || !room.terminal) continue;
+            if (roomName == des) continue;
             const store = room.terminal.store[resourceType];
-            if(store >= amount) {
+            if (store >= amount) {
                 const code = room.terminal.send(resourceType, amount, des);
-                if(code === OK) {
+                if (code === OK) {
                     return `成功从${roomName}传输${amount}个${resourceType}到${des}`;
                 }
                 else console.log(`从${roomName}传输${amount}个${resourceType}到${des}失败，返回值：${errCode2description[code]}`);
@@ -272,19 +272,19 @@ export class Command{
         return '传输失败';
     }
 
-    static checkRoomEnvirounment(room: Room): boolean{
-        if(!Memory.stableData[room.name].basePosition) return false;
+    static checkRoomEnvirounment(room: Room): boolean {
+        if (!Memory.stableData[room.name].basePosition) return false;
         return true;
     }
 
     static launchNukes(des: [number, number, string][]) {
         let poses: RoomPosition[] = [];
         _.forEach(des, d => poses.push(new RoomPosition(d[0], d[1], d[2])));
-        if(!poses.length) return '未传入有效目标';
+        if (!poses.length) return '未传入有效目标';
         let nukes: StructureNuker[] = _.filter(Game.structures, structure => structure.structureType == STRUCTURE_NUKER) as StructureNuker[];
         nukes = nukes.filter(nuke => !nuke.store.getFreeCapacity(RESOURCE_ENERGY) && !nuke.store.getFreeCapacity(RESOURCE_GHODIUM) && !nuke.cooldown && _.any(poses, pos => Game.map.getRoomLinearDistance(pos.roomName, nuke.pos.roomName) <= 10) && nuke.isActive());
-        if(!nukes.length) return '未找到可用核弹';
-        let solutions: {[posIndex: number]: number}[] = [{[-1]: -1}];
+        if (!nukes.length) return '未找到可用核弹';
+        let solutions: { [posIndex: number]: number }[] = [{ [-1]: -1 }];
         for (let pi = 0; pi < poses.length; pi++) {
             let newSolutions = Array(...solutions);
             solutions.forEach(solution => {
@@ -301,16 +301,16 @@ export class Command{
             _.forEach(solution, (pi: number, ni) => {
                 let pos = poses[pi];
                 let nuke = nukes[ni!] as StructureNuker;
-                if(Game.map.getRoomLinearDistance(nuke.pos.roomName, pos.roomName) > 10) solution[ni!] = -1;
+                if (Game.map.getRoomLinearDistance(nuke.pos.roomName, pos.roomName) > 10) solution[ni!] = -1;
             });
             return solution;
         });
         let best = _.max(solutions, solution => _.countBy(_.uniq(Object.values(solution).filter(v => v !== -1)), pi => pi !== -1)['true']);
-        if(best as any != -Infinity) {
+        if (best as any != -Infinity) {
             _.forEach(best, (ni: number, pi) => {
                 let nuke = nukes[ni];
                 let code = nuke.launchNuke(poses[pi!]);
-                if(code == OK) {
+                if (code == OK) {
                     console.log(`已从 ${nuke.room.name} 向 ${poses[pi!]} 发射核弹`);
                 } else console.log(`从 ${nuke.room.name} 向 ${poses[pi!]} 发射核弹失败，返回值：${errCode2description[code]}`);
             });
